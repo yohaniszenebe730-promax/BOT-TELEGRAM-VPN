@@ -28,8 +28,18 @@ install_bot() {
     echo -e "       CONFIGURACION BOT DEPWISE V7.1 (GO)"
     echo -e "==================================================${NC}"
 
-    read -p "Introduce el TOKEN: " BOT_TOKEN
-    read -p "Introduce tu Chat ID de Telegram: " ADMIN_ID
+    # Cargar credenciales si ya existen para no volver a pedirlas
+    if [ -f "$ENV_FILE" ]; then
+        log_info "Cargando credenciales existentes desde $ENV_FILE..."
+        # Extraer valores evitando problemas de formateo
+        BOT_TOKEN=$(grep -E "^BOT_TOKEN=" "$ENV_FILE" | cut -d'=' -f2-)
+        ADMIN_ID=$(grep -E "^SUPER_ADMIN=" "$ENV_FILE" | cut -d'=' -f2-)
+    fi
+
+    if [ -z "${BOT_TOKEN:-}" ] || [ -z "${ADMIN_ID:-}" ]; then
+        read -p "Introduce el TOKEN: " BOT_TOKEN
+        read -p "Introduce tu Chat ID de Telegram: " ADMIN_ID
+    fi
 
     if [ -z "$BOT_TOKEN" ] || [ -z "$ADMIN_ID" ]; then
         log_error "Error: Datos incompletos."
