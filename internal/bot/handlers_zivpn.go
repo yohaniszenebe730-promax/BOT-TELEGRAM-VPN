@@ -22,9 +22,9 @@ func handleCrearZivpn(c tele.Context, b *tele.Bot) error {
 		return c.Edit("⛔ <b>ACCESO DENEGADO</b>", tele.ModeHTML)
 	}
 
-	UserSteps[chatID] = "awaiting_zivpn_pass"
-	TempData[chatID] = make(map[string]string)
-	lastMsg, _ := LastBotMsg[chatID]
+	SetUserStep(chatID, "awaiting_zivpn_pass")
+	SetTempData(chatID, make(map[string]string))
+	lastMsg := GetLastBotMsg(chatID)
 
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "cancelar_accion")))
@@ -35,8 +35,7 @@ func handleCrearZivpn(c tele.Context, b *tele.Bot) error {
 
 func finishZivpnCreation(c tele.Context, password string, days int, chatID int64, b *tele.Bot, lastMsg *tele.Message) error {
 	// Bloquear estado inmediatamente para evitar spam/carreras
-	delete(UserSteps, chatID)
-	delete(LastBotMsg, chatID)
+	DeleteUserStep(chatID)
 
 	SafeEdit(chatID, b, lastMsg, "⏳ <i>Registrando acceso en ZiVPN...</i>", nil)
 
@@ -111,12 +110,12 @@ func processZivpnSteps(step string, text string, chatID int64, c tele.Context, b
 			return err
 		}
 
-		TempData[chatID]["zivpn_pass"] = password
+		SetTempValue(chatID, "zivpn_pass", password)
 
 		// Determinar días según rol
 		if isSuperAdminID(chatID) {
 			// SuperAdmin: pedir días libremente
-			UserSteps[chatID] = "awaiting_zivpn_days"
+			SetUserStep(chatID, "awaiting_zivpn_days")
 			_, err := SafeEdit(chatID, b, lastMsg, fmt.Sprintf("✅ Password <code>%s</code> guardada.\n\n⏳ <i>¿Cuántos días de duración? (ej: 30):</i>", html.EscapeString(password)), markupCancel)
 			return err
 		}
@@ -136,7 +135,7 @@ func processZivpnSteps(step string, text string, chatID int64, c tele.Context, b
 			return err
 		}
 
-		password := TempData[chatID]["zivpn_pass"]
+		password := GetTempValue(chatID, "zivpn_pass")
 		return finishZivpnCreation(c, password, days, chatID, b, lastMsg)
 	}
 

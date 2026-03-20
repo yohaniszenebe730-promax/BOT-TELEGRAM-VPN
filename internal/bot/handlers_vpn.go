@@ -58,7 +58,7 @@ func handleMenuBroadcast(c tele.Context, b *tele.Bot) error {
 		return c.Send("⛔ Solo administradores pueden usar esta función.", tele.ModeHTML)
 	}
 
-	UserSteps[chatID] = "awaiting_vpn_broadcast"
+	SetUserStep(chatID, "awaiting_vpn_broadcast")
 
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "back_main")))
@@ -314,8 +314,8 @@ func handleUninstallProtocol(c tele.Context, b *tele.Bot, proto string) error {
 // Instaladores (Interacciones base)
 func handleInstallSlowDNS(c tele.Context, b *tele.Bot, lastMsg *tele.Message) error {
 	chatID := c.Chat().ID
-	UserSteps[chatID] = "awaiting_vpn_slowdns_domain"
-	TempData[chatID] = make(map[string]string)
+	SetUserStep(chatID, "awaiting_vpn_slowdns_domain")
+	SetTempData(chatID, make(map[string]string))
 
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "cancelar_accion")))
@@ -396,7 +396,7 @@ func handleInstallBadVPN(c tele.Context, b *tele.Bot, lastMsg *tele.Message) err
 
 func handleInstallFalcon(c tele.Context, b *tele.Bot, lastMsg *tele.Message) error {
 	chatID := c.Chat().ID
-	UserSteps[chatID] = "awaiting_vpn_falcon_port"
+	SetUserStep(chatID, "awaiting_vpn_falcon_port")
 
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "cancelar_accion")))
@@ -440,7 +440,7 @@ func handleInstallSSL(c tele.Context, b *tele.Bot, lastMsg *tele.Message) error 
 
 func handleInstallDropbear(c tele.Context, b *tele.Bot, lastMsg *tele.Message) error {
 	chatID := c.Chat().ID
-	UserSteps[chatID] = "awaiting_vpn_dropbear_port"
+	SetUserStep(chatID, "awaiting_vpn_dropbear_port")
 
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "cancelar_accion")))
@@ -451,7 +451,7 @@ func handleInstallDropbear(c tele.Context, b *tele.Bot, lastMsg *tele.Message) e
 
 func handleInstallProxyDT(c tele.Context, b *tele.Bot, lastMsg *tele.Message) error {
 	chatID := c.Chat().ID
-	UserSteps[chatID] = "awaiting_vpn_proxydt_port"
+	SetUserStep(chatID, "awaiting_vpn_proxydt_port")
 
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "cancelar_accion")))
@@ -467,8 +467,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 
 	switch step {
 	case "awaiting_vpn_broadcast":
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 
 		data, _ := db.Load()
 		total := len(data.UserHistory)
@@ -500,8 +499,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 
 	case "awaiting_vpn_admin_id":
 		id := text
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 
 		// Solo numérico
 		if _, err := strconv.ParseInt(id, 10, 64); err != nil {
@@ -519,8 +517,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 
 	case "awaiting_vpn_extrainfo":
 		info := text
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 
 		db.Update(func(data *db.ConfigData) error {
 			data.ExtraInfo = info
@@ -532,8 +529,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 
 	case "awaiting_vpn_cloudflare":
 		domain := text
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 		db.Update(func(data *db.ConfigData) error {
 			data.CloudflareDomain = domain
 			return nil
@@ -543,8 +539,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 
 	case "awaiting_vpn_cloudfront":
 		domain := text
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 		db.Update(func(data *db.ConfigData) error {
 			data.CloudfrontDomain = domain
 			return nil
@@ -554,8 +549,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 
 	case "awaiting_vpn_ssh_banner":
 		banner := text
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 		db.Update(func(data *db.ConfigData) error {
 			data.SSHBanner = banner
 			return nil
@@ -579,7 +573,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 			SafeEdit(chatID, b, lastMsg, "⚠️ Valor inválido. Escribe un número mayor a 0:", markupRetry)
 			return nil
 		}
-		delete(UserSteps, chatID)
+		DeleteUserStep(chatID)
 
 		var label string
 		db.Update(func(data *db.ConfigData) error {
@@ -606,8 +600,8 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 		return nil
 
 	case "awaiting_vpn_slowdns_domain":
-		TempData[chatID]["domain"] = text
-		UserSteps[chatID] = "awaiting_vpn_slowdns_port"
+		SetTempValue(chatID, "domain", text)
+		SetUserStep(chatID, "awaiting_vpn_slowdns_port")
 
 		markupCancel := &tele.ReplyMarkup{}
 		markupCancel.Inline(markupCancel.Row(markupCancel.Data("❌ Cancelar", "cancelar_accion")))
@@ -615,11 +609,10 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 		return nil
 
 	case "awaiting_vpn_slowdns_port":
-		domain := TempData[chatID]["domain"]
+		domain := GetTempValue(chatID, "domain")
 		port := text
 
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 
 		b.Edit(lastMsg, "⏳ <i>Descargando binarios e instalando SlowDNS... (Tomará unos segundos)</i>", tele.ModeHTML)
 
@@ -652,8 +645,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 			b.Edit(lastMsg, "❌ <b>Puerto inválido.</b> Por favor, ingresa solo números (Ej: 7300).", markup, tele.ModeHTML)
 			return nil
 		}
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 
 		b.Edit(lastMsg, "⏳ <i>Instalando ZiVPN (UDP Custom)...</i>", tele.ModeHTML)
 
@@ -683,8 +675,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 			b.Edit(lastMsg, "❌ <b>Puerto inválido.</b> Por favor, ingresa solo números (Ej: 7200).", markup, tele.ModeHTML)
 			return nil
 		}
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 
 		b.Edit(lastMsg, "⏳ <i>Descargando e instalando BadVPN...</i>", tele.ModeHTML)
 
@@ -710,8 +701,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 
 	case "awaiting_vpn_falcon_port":
 		port := text
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 
 		b.Edit(lastMsg, "⏳ <i>Instalando Falcon Proxy...</i>", tele.ModeHTML)
 		ver, err := vpn.InstallFalcon(port)
@@ -736,8 +726,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 
 	case "awaiting_vpn_ssl_port":
 		port := text
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 
 		b.Edit(lastMsg, "⏳ <i>Configurando SSL Tunnel (HAProxy)...</i>", tele.ModeHTML)
 		err := vpn.InstallSSLTunnel(port)
@@ -761,8 +750,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 
 	case "awaiting_vpn_dropbear_port":
 		ports := text
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 
 		b.Edit(lastMsg, "⏳ <i>Configurando Dropbear (multi-puerto)...</i>", tele.ModeHTML)
 		err := vpn.InstallDropbear(ports)
@@ -791,8 +779,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 			b.Edit(lastMsg, "❌ <b>Puerto inválido.</b> Por favor, ingresa solo números (Ej: 8080).", markup, tele.ModeHTML)
 			return nil
 		}
-		delete(UserSteps, chatID)
-		delete(LastBotMsg, chatID)
+		DeleteUserStep(chatID)
 
 		b.Edit(lastMsg, "⏳ <i>Instalando y configurando ProxyDT...</i>", tele.ModeHTML)
 

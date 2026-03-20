@@ -115,8 +115,8 @@ func RenewSSHUser(username string, days int) error {
 
 // SetSSHBanner configura el banner de bienvenida de SSH
 func SetSSHBanner(text string) error {
-	// Guardar en /etc/sshd_banner
-	err := exec.Command("sh", "-c", fmt.Sprintf("echo '%s' > /etc/sshd_banner", text)).Run()
+	// Guardar en /etc/sshd_banner de forma segura usando Go nativo
+	err := os.WriteFile("/etc/sshd_banner", []byte(text), 0644)
 	if err != nil {
 		return err
 	}

@@ -105,7 +105,7 @@ func handleEditQuotas(c tele.Context, b *tele.Bot) error {
 
 func handleQuotaPrompt(c tele.Context, b *tele.Bot, step string, label string) error {
 	chatID := c.Chat().ID
-	UserSteps[chatID] = step
+	SetUserStep(chatID, step)
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "edit_quotas")))
 	return SafeEditCtx(c, b, fmt.Sprintf("✏️ <b>%s</b>\n\n<i>Escribe el nuevo valor (número):</i>", label), markup)
@@ -131,7 +131,7 @@ func handleListAdmins(c tele.Context, b *tele.Bot) error {
 
 func handleAddAdminPrompt(c tele.Context, b *tele.Bot) error {
 	chatID := c.Chat().ID
-	UserSteps[chatID] = "awaiting_vpn_admin_id"
+	SetUserStep(chatID, "awaiting_vpn_admin_id")
 
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "menu_admins")))
@@ -167,7 +167,7 @@ func handleDelAdminExec(c tele.Context, b *tele.Bot) error {
 
 func handleEditExtraInfoPrompt(c tele.Context, b *tele.Bot) error {
 	chatID := c.Chat().ID
-	UserSteps[chatID] = "awaiting_vpn_extrainfo"
+	SetUserStep(chatID, "awaiting_vpn_extrainfo")
 
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "menu_admins")))
@@ -177,7 +177,7 @@ func handleEditExtraInfoPrompt(c tele.Context, b *tele.Bot) error {
 
 func handleEditCloudflarePrompt(c tele.Context, b *tele.Bot) error {
 	chatID := c.Chat().ID
-	UserSteps[chatID] = "awaiting_vpn_cloudflare"
+	SetUserStep(chatID, "awaiting_vpn_cloudflare")
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "menu_admins")))
 	return SafeEditCtx(c, b, "☁️ <b>Configurar Dominio Cloudflare</b>\n\n✏️ <i>Escribe el dominio :</i>\n\nEjemplo: <code>mi.host.com</code>", markup)
@@ -185,7 +185,7 @@ func handleEditCloudflarePrompt(c tele.Context, b *tele.Bot) error {
 
 func handleEditCloudfrontPrompt(c tele.Context, b *tele.Bot) error {
 	chatID := c.Chat().ID
-	UserSteps[chatID] = "awaiting_vpn_cloudfront"
+	SetUserStep(chatID, "awaiting_vpn_cloudfront")
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "menu_admins")))
 	return SafeEditCtx(c, b, "🚀 <b>Configurar Dominio Cloudfront</b>\n\n✏️ <i>Escribe el dominio:</i>\n\nEjemplo: <code>xyz123.cloudfront.net</code>", markup)
@@ -287,7 +287,7 @@ func handleBannerSetDefault(c tele.Context, b *tele.Bot) error {
 
 func handleBannerSetCustom(c tele.Context, b *tele.Bot) error {
 	chatID := c.Chat().ID
-	UserSteps[chatID] = "awaiting_vpn_ssh_banner"
+	SetUserStep(chatID, "awaiting_vpn_ssh_banner")
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "edit_banner")))
 	return SafeEditCtx(c, b, "📜 <b>Banner SSH Personalizado</b>\n\n✏️ <i>Escribe el texto del banner (admite HTML básico):</i>\n\nEsto se mostrará al conectar por SSH.", markup)

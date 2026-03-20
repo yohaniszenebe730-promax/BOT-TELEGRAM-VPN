@@ -28,8 +28,8 @@ func handleMenuScanner(c tele.Context, b *tele.Bot) error {
 
 func handleStartScanPrompt(c tele.Context, b *tele.Bot) error {
 	chatID := c.Chat().ID
-	UserSteps[chatID] = "awaiting_scanner_domain"
-	LastBotMsg[chatID] = c.Message()
+	SetUserStep(chatID, "awaiting_scanner_domain")
+	SetLastBotMsg(chatID, c.Message())
 
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "menu_scanner")))
@@ -43,8 +43,7 @@ func processScannerSteps(step string, text string, chatID int64, c tele.Context,
 	}
 
 	domain := strings.TrimSpace(text)
-	delete(UserSteps, chatID)
-	delete(LastBotMsg, chatID)
+	DeleteUserStep(chatID)
 
 	b.Edit(lastMsg, fmt.Sprintf("⏳ <b>Escaneando:</b> <code>%s</code>\n\n<i>Esto puede tardar unos segundos, por favor espera...</i>", domain), tele.ModeHTML)
 

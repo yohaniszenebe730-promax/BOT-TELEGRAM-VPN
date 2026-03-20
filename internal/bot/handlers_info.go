@@ -187,7 +187,7 @@ func handleMenuEliminar(c tele.Context, b *tele.Bot) error {
 	res += "✏️ <b>Escribe el Nombre o Password</b> de la cuenta que deseas eliminar exactamente como aparece arriba:"
 
 	// Cambiar estado a espera de texto
-	UserSteps[chatID] = "awaiting_delete_user_selection"
+	SetUserStep(chatID, "awaiting_delete_user_selection")
 
 	return SafeEditCtx(c, b, res, markup)
 }
@@ -198,7 +198,7 @@ func processDeleteSteps(text string, chatID int64, c tele.Context, b *tele.Bot) 
 	sa, _ := strconv.ParseInt(superAdmin, 10, 64)
 	isSA := chatID == sa
 
-	lastMsg := LastBotMsg[chatID]
+	lastMsg := GetLastBotMsg(chatID)
 
 	// 1. Identificar si es SSH
 	if ownerID, exists := data.SSHOwners[target]; exists {

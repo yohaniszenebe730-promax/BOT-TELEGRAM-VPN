@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/db"
@@ -16,11 +17,81 @@ var (
 	botToken   = os.Getenv("BOT_TOKEN")
 	superAdmin = os.Getenv("SUPER_ADMIN")
 
-	// Estado Global de Conversación
+	// Estado Global de Conversación (Sincronizado)
+	stateMu    sync.RWMutex
 	UserSteps  = make(map[int64]string)
 	TempData   = make(map[int64]map[string]string)
 	LastBotMsg = make(map[int64]*tele.Message)
 )
+
+func GetUserStep(chatID int64) string {
+	stateMu.RLock()
+	defer stateMu.RUnlock()
+	return UserSteps[chatID]
+}
+
+func GetUserStepWithOk(chatID int64) (string, bool) {
+	stateMu.RLock()
+	defer stateMu.RUnlock()
+	step, ok := UserSteps[chatID]
+	return step, ok
+}
+
+func SetUserStep(chatID int64, step string) {
+	stateMu.Lock()
+	defer stateMu.Unlock()
+	UserSteps[chatID] = step
+}
+
+func DeleteUserStep(chatID int64) {
+	stateMu.Lock()
+	defer stateMu.Unlock()
+	delete(UserSteps, chatID)
+	delete(TempData, chatID)
+	delete(LastBotMsg, chatID)
+}
+
+func GetTempData(chatID int64) map[string]string {
+	stateMu.RLock()
+	defer stateMu.RUnlock()
+	return TempData[chatID]
+}
+
+func SetTempData(chatID int64, data map[string]string) {
+	stateMu.Lock()
+	defer stateMu.Unlock()
+	TempData[chatID] = data
+}
+
+func GetTempValue(chatID int64, key string) string {
+	stateMu.RLock()
+	defer stateMu.RUnlock()
+	if TempData[chatID] == nil {
+		return ""
+	}
+	return TempData[chatID][key]
+}
+
+func SetTempValue(chatID int64, key, value string) {
+	stateMu.Lock()
+	defer stateMu.Unlock()
+	if TempData[chatID] == nil {
+		TempData[chatID] = make(map[string]string)
+	}
+	TempData[chatID][key] = value
+}
+
+func GetLastBotMsg(chatID int64) *tele.Message {
+	stateMu.RLock()
+	defer stateMu.RUnlock()
+	return LastBotMsg[chatID]
+}
+
+func SetLastBotMsg(chatID int64, msg *tele.Message) {
+	stateMu.Lock()
+	defer stateMu.Unlock()
+	LastBotMsg[chatID] = msg
+}
 
 // StartBot inicializa el bot de Telegram y registra los handlers
 func StartBot() {
@@ -249,7 +320,7 @@ func SafeEdit(chatID int64, b *tele.Bot, msg *tele.Message, text string, markup 
 	}
 
 	if err == nil {
-		LastBotMsg[chatID] = newMsg
+		SetLastBotMsg(chatID, newMsg)
 	}
 	return newMsg, err
 }
@@ -260,7 +331,7 @@ func SafeEditCtx(c tele.Context, b *tele.Bot, text string, markup *tele.ReplyMar
 	if c.Callback() != nil {
 		lastMsg = c.Message()
 	} else {
-		lastMsg = LastBotMsg[c.Chat().ID]
+		lastMsg = GetLastBotMsg(c.Chat().ID)
 	}
 
 	_, err := SafeEdit(c.Chat().ID, b, lastMsg, text, markup)
@@ -271,7 +342,7 @@ func handleStart(c tele.Context, b *tele.Bot) error {
 	chatID := c.Chat().ID
 
 	// Limpiar cualquier estado activo al volver al menú
-	delete(UserSteps, chatID)
+	DeleteUserStep(chatID)
 
 	data, _ := db.Load()
 
@@ -310,7 +381,7 @@ func handleStart(c tele.Context, b *tele.Bot) error {
 	}
 
 	if err == nil {
-		LastBotMsg[chatID] = msg
+		SetLastBotMsg(chatID, msg)
 	}
 	return err
 }
