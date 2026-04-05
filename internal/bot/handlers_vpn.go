@@ -233,6 +233,13 @@ func handleSubMenuSSHWS(c tele.Context, b *tele.Bot) error {
 }
 
 func handleInstallSSHWS(c tele.Context, b *tele.Bot) error {
+	data, _ := db.Load()
+	if data.SSLTunnel != "" {
+		markup := &tele.ReplyMarkup{}
+		markup.Inline(markup.Row(markup.Data("🔙 Volver", "submenu_sshws")))
+		return SafeEditCtx(c, b, "⚠️ <b>Conflicto de Protocolos</b>\n\nNo puedes instalar <b>SSH WebSocket</b> de manera independiente porque <b>HAProxy (SSL Tunnel)</b> ya está instalado. HAProxy ya trae su propio proxy WS nativo, y si instalas este generarían un conflicto de puertos.", markup)
+	}
+
 	SafeEditCtx(c, b, "⏳ <b>Instalando SSH WebSocket...</b>\n\n<i>Descargando binarios ssh-ws y ssh-ws-pro...\nEsto puede tardar unos segundos...</i>", nil)
 
 	err := vpn.InstallSSHWebSocket()
@@ -406,6 +413,14 @@ func handleInstallFalcon(c tele.Context, b *tele.Bot, lastMsg *tele.Message) err
 }
 
 func handleInstallSSL(c tele.Context, b *tele.Bot, lastMsg *tele.Message) error {
+	data, _ := db.Load()
+	if !data.BadVPN {
+		markup := &tele.ReplyMarkup{}
+		markup.Inline(markup.Row(markup.Data("🔙 Volver", "submenu_ssl")))
+		b.Edit(lastMsg, "⚠️ <b>Requisito Faltante</b>\n\nNo puedes instalar <b>HAProxy (SSL Tunnel)</b> sin tener <b>BadVPN</b> previamente instalado. HAProxy depende de BadVPN para reenviar el tráfico de juegos online correctamente.\n\nPor favor instala BadVPN primero.", markup, tele.ModeHTML)
+		return nil
+	}
+
 	chatID := c.Chat().ID
 	delete(UserSteps, chatID)
 
