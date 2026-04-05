@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // haproxyCfg es la configuración multi-protocolo de HAProxy.
@@ -87,14 +88,14 @@ frontend ssl_frontend
     acl acl_path_ssh path_reg -i ^\/fightertunnelssh.*
 
     use_backend grpc_backend if acl_http2
-    use_backend websocket_backend if acl_upgrade acl_websocket
-    use_backend websocket_backend if acl_path_regex
-    use_backend bot_ftvpn_backend if acl_payload
     use_backend payload_backend if acl_path_vless
     use_backend payload_backend if acl_path_vmess
     use_backend payload_backend if acl_path_trojan
     use_backend payload_backend if acl_path_grpc
     use_backend ssh_backend if acl_path_ssh
+    use_backend websocket_backend if acl_upgrade acl_websocket
+    use_backend websocket_backend if acl_path_regex
+    use_backend bot_ftvpn_backend if acl_payload
     default_backend ssh_ws_default_backend
 
 backend websocket_backend
@@ -174,7 +175,13 @@ func InstallSSLTunnel(port string) error {
 	os.Remove("/etc/systemd/system/ssh-wss.service")
 
 	// 6. Escribir configuración HAProxy
-	if err := os.WriteFile(configFile, []byte(haproxyCfg), 0644); err != nil {
+	config := haproxyCfg
+	if port != "443" && port != "" {
+		// Reemplazar el bind principal de multiport si el usuario eligió otro
+		config = strings.ReplaceAll(config, "bind *:443 tfo", "bind *:443 tfo\n    bind *:"+port+" tfo")
+	}
+
+	if err := os.WriteFile(configFile, []byte(config), 0644); err != nil {
 		return fmt.Errorf("fallo escribir haproxy.cfg: %v", err)
 	}
 
