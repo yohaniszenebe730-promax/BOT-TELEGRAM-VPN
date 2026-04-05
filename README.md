@@ -32,7 +32,6 @@
 
 ### 🧹 Mantenimiento Inteligente
 - **Persistencia de Tráfico:** Conservación ininterrumpida de métricas de red y ancho de banda, garantizando que no se pierdan datos al reiniciar el servidor.
-- **Limpieza de Zombis:** Eliminación automática de usuarios inactivos por más de 12 horas (excluyendo al SuperAdmin).
 - **Deep System Cleanup:** Botón de un solo clic para liberar espacio en el SSD (Apt, Logs, Caché de Go).
 - **Auto-Cleanup Loop:** Monitoreo constante de expiraciones y limpieza de sistema.
 
