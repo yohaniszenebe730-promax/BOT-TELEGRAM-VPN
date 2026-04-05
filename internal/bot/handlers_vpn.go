@@ -747,7 +747,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 		res += "━━━━━━━━━━━━━━\n"
 
 		// Guardar estado
-		data, _ := db.Load()
+		data, _ = db.Load()
 		data.Falcon = port
 		db.Save(data)
 
@@ -845,7 +845,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 		res += "━━━━━━━━━━━━━━\n"
 
 		// Guardar estado
-		data, _ := db.Load()
+		data, _ = db.Load()
 		if data.ProxyDT.Ports == nil {
 			data.ProxyDT.Ports = make(map[string]string)
 		}
