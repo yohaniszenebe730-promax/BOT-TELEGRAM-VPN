@@ -660,7 +660,7 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 		}
 		return nil
 
-	case "awaiting_quota_days_public", "awaiting_quota_limit_public", "awaiting_quota_days_admin", "awaiting_quota_limit_admin":
+	case "awaiting_quota_days_public", "awaiting_quota_limit_public", "awaiting_quota_days_admin", "awaiting_quota_limit_admin", "awaiting_quota_xray_public", "awaiting_quota_xray_admin":
 		val, err := strconv.Atoi(text)
 		if err != nil || val <= 0 {
 			markupRetry := &tele.ReplyMarkup{}
@@ -685,6 +685,12 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 			case "awaiting_quota_limit_admin":
 				data.MaxLimitAdmin = val
 				label = fmt.Sprintf("Dispositivos Admin → %d", val)
+			case "awaiting_quota_xray_public":
+				data.MaxXrayPublic = val
+				label = fmt.Sprintf("VMess Público → %d cuentas", val)
+			case "awaiting_quota_xray_admin":
+				data.MaxXrayAdmin = val
+				label = fmt.Sprintf("VMess Admin → %d cuentas", val)
 			}
 			return nil
 		})

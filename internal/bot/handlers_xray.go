@@ -25,6 +25,28 @@ func handleCrearXray(c tele.Context, b *tele.Bot) error {
 		return c.Edit("⛔ <b>ACCESO DENEGADO</b>", tele.ModeHTML)
 	}
 
+	// Verificar cuota de cuentas VMess (SuperAdmin sin límite)
+	if !isSuperAdminID(chatID) {
+		maxAccounts := data.GetMaxXrayPublic()
+		if isAdmin(chatID) {
+			maxAccounts = data.GetMaxXrayAdmin()
+		}
+
+		// Contar cuentas existentes de este usuario
+		currentCount := 0
+		for _, user := range data.XrayUsers {
+			if user.Owner == fmt.Sprintf("%d", chatID) {
+				currentCount++
+			}
+		}
+
+		if currentCount >= maxAccounts {
+			markup := &tele.ReplyMarkup{}
+			markup.Inline(markup.Row(markup.Data("🔙 Volver", "back_main")))
+			return SafeEditCtx(c, b, fmt.Sprintf("⚠️ <b>Límite Alcanzado</b>\n\nYa tienes <code>%d/%d</code> cuentas VMess activas.\nNo puedes crear más hasta que se elimine o expire alguna.", currentCount, maxAccounts), markup)
+		}
+	}
+
 	SetUserStep(chatID, "awaiting_xray_alias")
 	SetTempData(chatID, make(map[string]string))
 	lastMsg := GetLastBotMsg(chatID)

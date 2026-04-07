@@ -63,6 +63,8 @@ func handleMenuAdmins(c tele.Context, b *tele.Bot) error {
 	texto += fmt.Sprintf("👥 <b>Historial:</b> %d IDs\n", len(data.UserHistory))
 	texto += fmt.Sprintf("📊 <b>Cuotas Público:</b> %d días / %d disp.\n", data.GetMaxDaysPublic(), data.GetMaxLimitPublic())
 	texto += fmt.Sprintf("📊 <b>Cuotas Admin:</b> %d días / %d disp.\n", data.GetMaxDaysAdmin(), data.GetMaxLimitAdmin())
+	texto += fmt.Sprintf("💎 <b>VMess Público:</b> %d cuentas max\n", data.GetMaxXrayPublic())
+	texto += fmt.Sprintf("💎 <b>VMess Admin:</b> %d cuentas max\n", data.GetMaxXrayAdmin())
 	texto += "━━━━━━━━━━━━━━\n"
 	texto += "<i>Selecciona una opción avanzada:</i>"
 
@@ -85,20 +87,26 @@ func handleEditQuotas(c tele.Context, b *tele.Bot) error {
 	btnLimitPub := markup.Data(fmt.Sprintf("📱 Disp. Público: %d", data.GetMaxLimitPublic()), "quota_limit_public")
 	btnDaysAdm := markup.Data(fmt.Sprintf("📅 Días Admin: %d", data.GetMaxDaysAdmin()), "quota_days_admin")
 	btnLimitAdm := markup.Data(fmt.Sprintf("📱 Disp. Admin: %d", data.GetMaxLimitAdmin()), "quota_limit_admin")
+	btnXrayPub := markup.Data(fmt.Sprintf("💎 VMess Público: %d", data.GetMaxXrayPublic()), "quota_xray_public")
+	btnXrayAdm := markup.Data(fmt.Sprintf("💎 VMess Admin: %d", data.GetMaxXrayAdmin()), "quota_xray_admin")
 	btnBack := markup.Data("🔙 Volver", "menu_admins")
 
 	markup.Inline(
 		markup.Row(btnDaysPub, btnLimitPub),
 		markup.Row(btnDaysAdm, btnLimitAdm),
+		markup.Row(btnXrayPub, btnXrayAdm),
 		markup.Row(btnBack),
 	)
 
 	texto := "📊 <b>Cuotas de Creación de Usuarios</b>\n"
 	texto += "━━━━━━━━━━━━━━\n"
-	texto += fmt.Sprintf("👥 <b>Público:</b> %d días / %d dispositivos\n", data.GetMaxDaysPublic(), data.GetMaxLimitPublic())
-	texto += fmt.Sprintf("👤 <b>Admins:</b> %d días / %d dispositivos\n", data.GetMaxDaysAdmin(), data.GetMaxLimitAdmin())
+	texto += fmt.Sprintf("👥 <b>Público SSH:</b> %d días / %d dispositivos\n", data.GetMaxDaysPublic(), data.GetMaxLimitPublic())
+	texto += fmt.Sprintf("👤 <b>Admin SSH:</b> %d días / %d dispositivos\n", data.GetMaxDaysAdmin(), data.GetMaxLimitAdmin())
 	texto += "━━━━━━━━━━━━━━\n"
-	texto += "<i>Estos valores se aplican automáticamente al crear usuarios SSH.\nEl SuperAdmin no tiene límites.</i>"
+	texto += fmt.Sprintf("💎 <b>VMess Público:</b> máx %d cuentas\n", data.GetMaxXrayPublic())
+	texto += fmt.Sprintf("💎 <b>VMess Admin:</b> máx %d cuentas\n", data.GetMaxXrayAdmin())
+	texto += "━━━━━━━━━━━━━━\n"
+	texto += "<i>Estos valores se aplican al crear usuarios SSH y VMess.\nEl SuperAdmin no tiene límites.</i>"
 
 	return SafeEditCtx(c, b, texto, markup)
 }

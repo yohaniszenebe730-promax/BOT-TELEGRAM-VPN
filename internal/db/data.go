@@ -38,6 +38,8 @@ type ConfigData struct {
 	MaxLimitPublic   int                  `json:"max_limit_public"`  // Max device limit for public
 	MaxDaysAdmin     int                  `json:"max_days_admin"`    // Max days for admin user creation
 	MaxLimitAdmin    int                  `json:"max_limit_admin"`   // Max device limit for admins
+	MaxXrayPublic    int                  `json:"max_xray_public"`   // Max VMess accounts for public
+	MaxXrayAdmin     int                  `json:"max_xray_admin"`    // Max VMess accounts for admins
 	SysRXLast        uint64               `json:"sys_rx_last"`
 	SysTXLast        uint64               `json:"sys_tx_last"`
 	SysRXTotal       uint64               `json:"sys_rx_total"`
@@ -179,6 +181,22 @@ func (d *ConfigData) GetMaxLimitAdmin() int {
 		return 20
 	}
 	return d.MaxLimitAdmin
+}
+
+// GetMaxXrayPublic returns max VMess accounts for public users (default 1)
+func (d *ConfigData) GetMaxXrayPublic() int {
+	if d.MaxXrayPublic <= 0 {
+		return 1
+	}
+	return d.MaxXrayPublic
+}
+
+// GetMaxXrayAdmin returns max VMess accounts for admins (default 5)
+func (d *ConfigData) GetMaxXrayAdmin() int {
+	if d.MaxXrayAdmin <= 0 {
+		return 5
+	}
+	return d.MaxXrayAdmin
 }
 
 // Save guarda la memoria en el archivo bot_data.json

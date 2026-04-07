@@ -257,6 +257,12 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "quota_limit_admin"}, func(c tele.Context) error {
 		return handleQuotaPrompt(c, b, "awaiting_quota_limit_admin", "Dispositivos máximos para Admins")
 	})
+	b.Handle(&tele.Btn{Unique: "quota_xray_public"}, func(c tele.Context) error {
+		return handleQuotaPrompt(c, b, "awaiting_quota_xray_public", "Máx cuentas VMess para Público")
+	})
+	b.Handle(&tele.Btn{Unique: "quota_xray_admin"}, func(c tele.Context) error {
+		return handleQuotaPrompt(c, b, "awaiting_quota_xray_admin", "Máx cuentas VMess para Admins")
+	})
 	b.Handle(&tele.Btn{Unique: "reset_history"}, func(c tele.Context) error { return handleResetHistoryConfirm(c, b) })
 	b.Handle(&tele.Btn{Unique: "reset_history_exec"}, func(c tele.Context) error { return handleResetHistoryExec(c, b) })
 	b.Handle(&tele.Btn{Unique: "reboot_vps_confirm"}, func(c tele.Context) error { return handleServerRebootConfirm(c, b) })
