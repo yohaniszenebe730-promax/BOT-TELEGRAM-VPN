@@ -2,7 +2,6 @@ package bot
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 
 	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/db"
@@ -641,27 +640,6 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 			return nil
 		})
 		b.Edit(lastMsg, fmt.Sprintf("✅ <b>Dominio Cloudfront actualizado:</b> <code>%s</code>", domain), markup, tele.ModeHTML)
-		return nil
-
-	case "awaiting_vpn_reboot_time":
-		// Validar formato HH:MM
-		match, _ := regexp.MatchString(`^([01][0-9]|2[0-3]):[0-5][0-9]$`, text)
-		if !match {
-			markupRetry := &tele.ReplyMarkup{}
-			markupRetry.Inline(markupRetry.Row(markupRetry.Data("❌ Cancelar", "menu_autoreboot")))
-			SafeEdit(chatID, b, lastMsg, "⚠️ <b>Formato inválido.</b>\n\nPor favor usa el formato de 24 horas <code>HH:MM</code> (ejemplo: 03:00 o 15:45):", markupRetry)
-			return nil
-		}
-
-		DeleteUserStep(chatID)
-		db.Update(func(data *db.ConfigData) error {
-			data.RebootTime = text
-			return nil
-		})
-
-		markupBack := &tele.ReplyMarkup{}
-		markupBack.Inline(markupBack.Row(markupBack.Data("🔙 Volver", "menu_autoreboot")))
-		b.Edit(lastMsg, fmt.Sprintf("✅ <b>Hora de reinicio guardada:</b> <code>%s</code>", text), markupBack, tele.ModeHTML)
 		return nil
 
 	case "awaiting_vpn_ssh_banner":

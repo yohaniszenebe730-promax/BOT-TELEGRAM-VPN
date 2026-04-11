@@ -1,6 +1,7 @@
 package sys
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 	"time"
@@ -39,15 +40,25 @@ func AutoCleanupLoop(b *tele.Bot) {
 			db.Update(func(data *db.ConfigData) error {
 				now := time.Now()
 				nowStr := now.Format("2006-01-02")
-				nowHM := now.Format("15:04")
 
-				// REBOOT DIARIO AUTOMÁTICO
-				if data.AutoReboot && data.RebootTime == nowHM && data.LastRebootDate != nowStr {
-					data.LastRebootDate = nowStr // Marcar día para evitar bucle antes del apagado
-					go func() {
-						time.Sleep(2 * time.Second)
-						exec.Command("reboot").Run()
-					}()
+				// REBOOT AUTOMÁTICO POR UPTIME (24 HORAS)
+				if data.AutoReboot {
+					outUptime, err := exec.Command("awk", "{print $1}", "/proc/uptime").Output()
+					if err == nil {
+						uptimeSecStr := strings.TrimSpace(string(outUptime))
+						var uptimeSecFloat float64
+						// Parsear manualmente de modo simplificado si se necesita.
+						// Para evitar dependencias extra si goimports falla, uso format standard.
+						// Pero mejor agregar la lógica que será limpiada con goimports:
+						fmt.Sscanf(uptimeSecStr, "%f", &uptimeSecFloat)
+						
+						if uptimeSecFloat >= 86400 {
+							go func() {
+								time.Sleep(2 * time.Second)
+								exec.Command("reboot").Run()
+							}()
+						}
+					}
 				}
 
 				// Revisar SSH

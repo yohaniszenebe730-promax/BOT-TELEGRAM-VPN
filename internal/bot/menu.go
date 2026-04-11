@@ -270,7 +270,6 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "toggle_public_scanner"}, func(c tele.Context) error { return handleTogglePublicScanner(c, b) })
 	b.Handle(&tele.Btn{Unique: "menu_autoreboot"}, func(c tele.Context) error { return handleAutoRebootMenu(c, b) })
 	b.Handle(&tele.Btn{Unique: "toggle_autoreboot"}, func(c tele.Context) error { return handleToggleAutoReboot(c, b) })
-	b.Handle(&tele.Btn{Unique: "edit_reboot_time"}, func(c tele.Context) error { return handleEditRebootTimePrompt(c, b) })
 
 	// Generar Usuario SSH / ZIVPN Handler
 	b.Handle(&tele.Btn{Unique: "crear_ssh"}, func(c tele.Context) error {
