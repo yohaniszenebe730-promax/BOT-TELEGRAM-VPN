@@ -295,10 +295,13 @@ func StartBot() {
 		return handleStartScanPrompt(c, b)
 	})
 
-	// Parchar config de Xray existente para habilitar access log (monitor online)
+	// Parchar config de Xray existente para habilitar access log y configurar resiliencia
 	if initData, _ := db.Load(); initData.Xray.Installed {
 		if err := vpn.EnsureXrayAccessLog(); err != nil {
 			log.Printf("Aviso: No se pudo habilitar access log de Xray: %v", err)
+		}
+		if err := vpn.EnsureXrayServiceResilience(); err != nil {
+			log.Printf("Aviso: No se pudo asegurar la resiliencia del servicio Xray: %v", err)
 		}
 	}
 

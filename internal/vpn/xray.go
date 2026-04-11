@@ -75,12 +75,10 @@ func InstallXray() error {
 		return fmt.Errorf("error escribiendo config.json de xray: %v", err)
 	}
 
-	if err := exec.Command("systemctl", "restart", "xray").Run(); err != nil {
-		return fmt.Errorf("error reiniciando xray.service: %v", err)
+	// Aplicar resiliencia del servicio (auto-restart y fix de OOM/Reboot)
+	if err := EnsureXrayServiceResilience(); err != nil {
+		return fmt.Errorf("error aplicando resiliencia a xray: %v", err)
 	}
-
-	// Asegurarse de que arranque al iniciar el sistema
-	exec.Command("systemctl", "enable", "xray").Run()
 
 	return nil
 }
@@ -121,6 +119,41 @@ func EnsureXrayAccessLog() error {
 	cfg["log"] = logSection
 
 	return saveXrayConfig(cfg)
+}
+
+// EnsureXrayServiceResilience asegura que el demonio de Xray se reinicie automáticamente
+// en caso de fallo (ej. OOM kill o saturación) y que espere a la red al reiniciar el VPS.
+func EnsureXrayServiceResilience() error {
+	dir := "/etc/systemd/system/xray.service.d"
+	overridePath := filepath.Join(dir, "10-resilience.conf")
+
+	// Si ya existe, asumimos que está configurado
+	if _, err := os.Stat(overridePath); err == nil {
+		return nil
+	}
+
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	content := `[Unit]
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Restart=always
+RestartSec=3
+StartLimitIntervalSec=0
+`
+	if err := os.WriteFile(overridePath, []byte(content), 0644); err != nil {
+		return err
+	}
+
+	exec.Command("systemctl", "daemon-reload").Run()
+	exec.Command("systemctl", "enable", "xray").Run()
+	exec.Command("systemctl", "restart", "xray").Run()
+
+	return nil
 }
 
 // loadXrayConfig lee la config JSON existente
