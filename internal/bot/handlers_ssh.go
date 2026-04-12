@@ -153,6 +153,10 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 		SetUserStep(chatID, "") // Clear step but retain TempData for subsequent edits
 		return showEditUserMenu(c, b, user)
 
+	case "awaiting_info_cuenta":
+		DeleteUserStep(chatID)
+		return processInfoCuenta(text, chatID, c, b)
+
 	case "awaiting_edit_pass_val":
 		user := GetTempValue(chatID, "edit_target")
 		err := sys.UpdateSSHUserPassword(user, text)
@@ -418,4 +422,100 @@ func handleEditSelection(c tele.Context, b *tele.Bot) error {
 
 func handleDeleteSelection(c tele.Context, b *tele.Bot) error {
 	return handleMenuEliminar(c, b)
+}
+
+func handleMenuInfoCuenta(c tele.Context, b *tele.Bot) error {
+	chatID := c.Chat().ID
+	markup := &tele.ReplyMarkup{}
+	markup.Inline(markup.Row(markup.Data("🔙 Volver", "back_main")))
+
+	SetUserStep(chatID, "awaiting_info_cuenta")
+	texto := "🔍 <b>CONSULTAR ESTADO DE CUENTA</b>\n\n"
+	texto += "✏️ <i>Escribe el nombre de usuario (SSH), contraseña (ZiVPN) o Alias/UUID (Xray):</i>"
+
+	return SafeEditCtx(c, b, texto, markup)
+}
+
+func processInfoCuenta(target string, chatID int64, c tele.Context, b *tele.Bot) error {
+	data, _ := db.Load()
+	sa, _ := strconv.ParseInt(superAdmin, 10, 64)
+	isSA := chatID == sa
+	target = strings.TrimSpace(target)
+
+	res := "ℹ️ <b>RESULTADO DE BÚSQUEDA</b>\n"
+	res += "━━━━━━━━━━━━━━\n"
+
+	found := false
+	ownerID := ""
+	accType := ""
+	expire := ""
+	details := ""
+
+	// 1. Buscar en SSH
+	if exp, ok := data.SSHTimeUsers[target]; ok {
+		ownerID = data.SSHOwners[target]
+		if isSA || ownerID == fmt.Sprintf("%d", chatID) {
+			found = true
+			accType = "🔒 SSH / Dropbear"
+			expire = exp
+			limit := sys.GetUserMaxLogins(target)
+			details = fmt.Sprintf("👤 <b>Usuario:</b> <code>%s</code>\n💻 <b>Límite:</b> %d", target, limit)
+		}
+	}
+
+	// 2. Buscar en ZiVPN
+	if !found {
+		if exp, ok := data.ZivpnUsers[target]; ok {
+			ownerID = data.ZivpnOwners[target]
+			if isSA || ownerID == fmt.Sprintf("%d", chatID) {
+				found = true
+				accType = "🛰️ ZiVPN UDP"
+				expire = exp
+				details = fmt.Sprintf("🔑 <b>Password:</b> <code>%s</code>", target)
+			}
+		}
+	}
+
+	// 3. Buscar en Xray
+	if !found {
+		for uid, user := range data.XrayUsers {
+			if strings.EqualFold(user.Alias, target) || uid == target {
+				ownerID = user.Owner
+				if isSA || ownerID == fmt.Sprintf("%d", chatID) {
+					found = true
+					accType = "💎 VMess (Xray)"
+					expire = user.Expire
+					details = fmt.Sprintf("👤 <b>Alias:</b> <code>%s</code>\n🆔 <b>UUID:</b> <code>%s</code>", user.Alias, uid)
+					break
+				}
+			}
+		}
+	}
+
+	markup := &tele.ReplyMarkup{}
+	markup.Inline(markup.Row(markup.Data("🔙 Volver", "back_main")))
+
+	if !found {
+		return SafeEditCtx(c, b, "❌ <b>Cuenta no encontrada o no tienes acceso.</b>", markup)
+	}
+
+	// Calcular días restantes
+	daysLeft := 0
+	parsedExpire, err := time.Parse("2006-01-02", expire)
+	if err == nil {
+		daysLeft = int(time.Until(parsedExpire).Hours() / 24)
+		if daysLeft < 0 {
+			daysLeft = 0
+		}
+	}
+
+	res += fmt.Sprintf("📌 <b>Tipo:</b> %s\n", accType)
+	res += details + "\n"
+	res += fmt.Sprintf("📅 <b>Vence:</b> <code>%s</code> (%d días restantes)\n", expire, daysLeft)
+	if isSA {
+		res += fmt.Sprintf("👤 <b>Dueño ID:</b> <code>%s</code>\n", ownerID)
+	}
+	res += "━━━━━━━━━━━━━━\n"
+
+	return SafeEditCtx(c, b, res, markup)
 }

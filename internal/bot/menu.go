@@ -143,6 +143,9 @@ func StartBot() {
 	})
 
 	// Opciones de Configuración Avanzada
+	b.Handle(&tele.Btn{Unique: "menu_info_cuenta"}, func(c tele.Context) error {
+		return handleMenuInfoCuenta(c, b)
+	})
 	b.Handle(&tele.Btn{Unique: "menu_editar"}, func(c tele.Context) error {
 		return handleMenuEditar(c, b)
 	})
@@ -456,6 +459,7 @@ func buildMainMenuMarkup(chatID int64) *tele.ReplyMarkup {
 	btnInfo := menu.Data("📡 Info Servidor", "menu_info")
 	btnEditar := menu.Data("✏️ Editar SSH", "menu_editar")
 	btnDelete := menu.Data("🗑️ Eliminar SSH", "menu_eliminar")
+	btnInfoCuenta := menu.Data("ℹ️ Info Cuenta", "menu_info_cuenta")
 	btnGlobal := menu.Data("📢 Mensaje Global", "menu_broadcast")
 	btnScanner := menu.Data("🔍 Escaner", "menu_scanner")
 	btnOnline := menu.Data("⚙️ Monitor Online", "menu_online")
@@ -485,8 +489,8 @@ func buildMainMenuMarkup(chatID int64) *tele.ReplyMarkup {
 		rows = append(rows, menu.Row(btnOnline))
 	}
 
-	// Fila 4: Eliminar
-	rows = append(rows, menu.Row(btnDelete))
+	// Fila 4: Info Cuenta y Eliminar
+	rows = append(rows, menu.Row(btnInfoCuenta, btnDelete))
 
 	// Fila 5: SuperAdmin / Admin Config
 	if isSA {
