@@ -426,14 +426,63 @@ func handleDeleteSelection(c tele.Context, b *tele.Bot) error {
 
 func handleMenuInfoCuenta(c tele.Context, b *tele.Bot) error {
 	chatID := c.Chat().ID
+	data, _ := db.Load()
+	sa, _ := strconv.ParseInt(superAdmin, 10, 64)
+	isSA := chatID == sa
+
+	res := "🔍 <b>CONSULTAR ESTADO DE CUENTA</b>\n━━━━━━━━━━━━━━\n"
+	count := 0
+
+	// 1. SSH Users
+	for user, ownerID := range data.SSHOwners {
+		if isSA || ownerID == fmt.Sprintf("%d", chatID) {
+			handle := data.SSHHandles[user]
+			if handle != "" {
+				res += fmt.Sprintf("👤 SSH: <code>%s</code> (%s)\n", user, handle)
+			} else {
+				res += fmt.Sprintf("👤 SSH: <code>%s</code>\n", user)
+			}
+			count++
+		}
+	}
+
+	// 2. ZiVPN Users
+	for pass, ownerID := range data.ZivpnOwners {
+		if isSA || ownerID == fmt.Sprintf("%d", chatID) {
+			handle := data.ZivpnHandles[pass]
+			if handle != "" {
+				res += fmt.Sprintf("🛰️ ZiVPN: <code>%s</code> (%s)\n", pass, handle)
+			} else {
+				res += fmt.Sprintf("🛰️ ZiVPN: <code>%s</code>\n", pass)
+			}
+			count++
+		}
+	}
+
+	// 3. Xray Users
+	for _, user := range data.XrayUsers {
+		if isSA || user.Owner == fmt.Sprintf("%d", chatID) {
+			if user.Handle != "" {
+				res += fmt.Sprintf("💎 Xray: <code>%s</code> (%s)\n", user.Alias, user.Handle)
+			} else {
+				res += fmt.Sprintf("💎 Xray: <code>%s</code>\n", user.Alias)
+			}
+			count++
+		}
+	}
+
+	res += "━━━━━━━━━━━━━━\n"
+	if count == 0 {
+		res += "<i>No tienes cuentas activas.</i>\n\n"
+	}
+
+	res += "✏️ <i>Escribe el nombre de usuario (SSH), contraseña (ZiVPN) o Alias/UUID (Xray):</i>"
+
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("🔙 Volver", "back_main")))
 
 	SetUserStep(chatID, "awaiting_info_cuenta")
-	texto := "🔍 <b>CONSULTAR ESTADO DE CUENTA</b>\n\n"
-	texto += "✏️ <i>Escribe el nombre de usuario (SSH), contraseña (ZiVPN) o Alias/UUID (Xray):</i>"
-
-	return SafeEditCtx(c, b, texto, markup)
+	return SafeEditCtx(c, b, res, markup)
 }
 
 func processInfoCuenta(target string, chatID int64, c tele.Context, b *tele.Bot) error {
