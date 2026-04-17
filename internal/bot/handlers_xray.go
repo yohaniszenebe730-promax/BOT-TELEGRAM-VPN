@@ -95,6 +95,40 @@ func handleManageXrayUsers(c tele.Context, b *tele.Bot) error {
 	return SafeEditCtx(c, b, res, markup)
 }
 
+func handleSubMenuXray(c tele.Context, b *tele.Bot) error {
+	chatID := c.Chat().ID
+	data, _ := db.Load()
+	status := "❌ Desinstalado"
+	if data.Xray.Installed {
+		status = "✅ Instalado"
+	}
+
+	markup := &tele.ReplyMarkup{}
+	btnInst := markup.Data("📥 Instalar", "install_xray")
+	btnManage := markup.Data("👥 Gestionar Usuarios", "manage_xray_users")
+	btnUninst := markup.Data("🗑️ Desinstalar", "uninstall_xray")
+	btnBack := markup.Data("🔙 Volver", "menu_protocols")
+
+	// Solo SuperAdmin puede ver Instalar/Desinstalar
+	if isSuperAdminID(chatID) {
+		if data.Xray.Installed {
+			markup.Inline(markup.Row(btnManage), markup.Row(btnUninst), markup.Row(btnBack))
+		} else {
+			markup.Inline(markup.Row(btnInst), markup.Row(btnBack))
+		}
+	} else {
+		// Admins y públicos solo ven gestión de usuarios
+		if data.Xray.Installed {
+			markup.Inline(markup.Row(btnManage), markup.Row(btnBack))
+		} else {
+			markup.Inline(markup.Row(btnBack))
+		}
+	}
+
+	texto := fmt.Sprintf("💎 <b>Gestión de Xray (VMess)</b>\n\n📊 <b>Estado:</b> %s\n⚙️ <b>Puerto Interno:</b> <code>10002</code>\n\nEste protocolo utiliza <b>VMess sobre WebSocket</b> y está diseñado para funcionar detrás de Cloudflare y HAProxy.\n\n¿Qué deseas hacer?", status)
+	return SafeEditCtx(c, b, texto, markup)
+}
+
 func processXraySteps(step string, text string, chatID int64, c tele.Context, b *tele.Bot, lastMsg *tele.Message) error {
 	markupCancel := &tele.ReplyMarkup{}
 	markupCancel.Inline(markupCancel.Row(markupCancel.Data("❌ Cancelar", "cancelar_accion")))
@@ -182,7 +216,7 @@ func finishXrayCreation(c tele.Context, b *tele.Bot, chatID int64, lastMsg *tele
 	res += "<i>Copia el link y pégalo en v2rayNG, HTTP Custom o NapsternetV.</i>"
 
 	markup := &tele.ReplyMarkup{}
-	markup.Inline(markup.Row(markup.Data("🔙 Volver", "submenu_xray")))
+	markup.Inline(markup.Row(markup.Data("🔙 Volver", "back_main")))
 	_, err = SafeEdit(chatID, b, lastMsg, res, markup)
 	return err
 }

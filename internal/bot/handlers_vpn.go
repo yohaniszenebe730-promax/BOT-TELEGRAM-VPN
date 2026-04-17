@@ -203,28 +203,6 @@ func handleSubMenuDropbear(c tele.Context, b *tele.Bot) error {
 	return SafeEditCtx(c, b, texto, markup)
 }
 
-func handleSubMenuXray(c tele.Context, b *tele.Bot) error {
-	data, _ := db.Load()
-	status := "❌ Desinstalado"
-	if data.Xray.Installed {
-		status = "✅ Instalado"
-	}
-
-	markup := &tele.ReplyMarkup{}
-	btnInst := markup.Data("📥 Instalar", "install_xray")
-	btnManage := markup.Data("👥 Gestionar Usuarios", "manage_xray_users")
-	btnUninst := markup.Data("🗑️ Desinstalar", "uninstall_xray")
-	btnBack := markup.Data("🔙 Volver", "menu_protocols")
-
-	if data.Xray.Installed {
-		markup.Inline(markup.Row(btnManage), markup.Row(btnUninst), markup.Row(btnBack))
-	} else {
-		markup.Inline(markup.Row(btnInst), markup.Row(btnBack))
-	}
-
-	texto := fmt.Sprintf("💎 <b>Gestión de Xray (VMess)</b>\n\n📊 <b>Estado:</b> %s\n⚙️ <b>Puerto Interno:</b> <code>10002</code>\n\nEste protocolo utiliza <b>VMess sobre WebSocket</b> y está diseñado para funcionar detrás de Cloudflare y HAProxy.\n\n¿Qué deseas hacer?", status)
-	return SafeEditCtx(c, b, texto, markup)
-}
 
 func handleSubMenuSSHWS(c tele.Context, b *tele.Bot) error {
 	data, _ := db.Load()
@@ -301,6 +279,11 @@ func handleSubMenuProxyDT(c tele.Context, b *tele.Bot) error {
 
 // Handlers de Desinstalación
 func handleUninstallProtocol(c tele.Context, b *tele.Bot, proto string) error {
+	chatID := c.Chat().ID
+	if !isSuperAdminID(chatID) {
+		return c.Respond(&tele.CallbackResponse{Text: "⛔ Solo el SuperAdmin puede desinstalar protocolos.", ShowAlert: true})
+	}
+
 	SafeEditCtx(c, b, fmt.Sprintf("⏳ <i>Desinstalando %s...</i>", proto), nil)
 	var err error
 	data, _ := db.Load()
@@ -493,6 +476,11 @@ func handleInstallDropbear(c tele.Context, b *tele.Bot, lastMsg *tele.Message) e
 }
 
 func handleInstallXray(c tele.Context, b *tele.Bot, lastMsg *tele.Message) error {
+	chatID := c.Chat().ID
+	if !isSuperAdminID(chatID) {
+		return c.Respond(&tele.CallbackResponse{Text: "⛔ Solo el SuperAdmin puede instalar protocolos.", ShowAlert: true})
+	}
+
 	data, _ := db.Load()
 
 	// Candados de seguridad
