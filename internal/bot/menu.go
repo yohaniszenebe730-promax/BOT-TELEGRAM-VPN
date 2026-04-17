@@ -309,6 +309,9 @@ func StartBot() {
 		}
 	}
 
+	// Restaurar reglas de iptables que se borran al reiniciar (SlowDNS, ZiVPN)
+	vpn.RestoreIptablesRules()
+
 	// Iniciar hilo de auto-limpieza (Rutina concurrente)
 	go sys.AutoCleanupLoop(b)
 

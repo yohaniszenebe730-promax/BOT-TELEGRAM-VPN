@@ -1,6 +1,7 @@
 package vpn
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -66,4 +67,49 @@ func GetSystemReport() string {
 	report += "\n💾 <b>Memoria RAM (MB):</b>\n<pre>" + string(free) + "</pre>"
 
 	return report
+}
+
+// RestoreIptablesRules re-applies the NAT configuration required for some protocols.
+// Since IPTables rules are lost on reboot on most unmanaged systems, this function is called
+// by the bot on startup to ensure VPN routing (like UDP redirects for ZiVPN/SlowDNS) works.
+func RestoreIptablesRules() {
+	// 1. SlowDNS (Redirect port 53 to 5300)
+	if _, err := os.Stat("/etc/slowdns/server.pub"); err == nil {
+		exec.Command("iptables", "-t", "nat", "-D", "PREROUTING", "-p", "udp", "--dport", "53", "-j", "REDIRECT", "--to-ports", "5300").Run()
+		exec.Command("iptables", "-t", "nat", "-A", "PREROUTING", "-p", "udp", "--dport", "53", "-j", "REDIRECT", "--to-ports", "5300").Run()
+	}
+
+	// 2. ZiVPN (Redirect UDP range 6000-19999)
+	if _, err := os.Stat("/etc/zivpn/config.json"); err == nil {
+		data, err := os.ReadFile("/etc/zivpn/config.json")
+		if err == nil {
+			var config ZivpnConfig
+			if err := json.Unmarshal(data, &config); err == nil {
+				// Listen is usually ":5667", so we extract the port
+				parts := strings.Split(config.Listen, ":")
+				if len(parts) >= 2 {
+					port := parts[len(parts)-1]
+					devOut, _ := exec.Command("bash", "-c", "ip -4 route show default | awk '{print $5}' | head -1").Output()
+					dev := strings.TrimSpace(string(devOut))
+					if dev == "" {
+						devOut, _ = exec.Command("bash", "-c", "ip link show up | grep -v loopback | grep -v 'lo:' | head -1 | awk '{print $2}' | cut -d':' -f1").Output()
+						dev = strings.TrimSpace(string(devOut))
+					}
+					if dev != "" {
+						// CLEAN: Wipe old rules to avoid duplication
+						exec.Command("bash", "-c", "iptables -t nat -S PREROUTING | grep '6000:19999' | sed 's/-A/-D/' | while read line; do iptables -t nat $line; done").Run()
+						exec.Command("bash", "-c", "iptables -S INPUT | grep '6000:19999' | sed 's/-A/-D/' | while read line; do iptables $line; done").Run()
+						exec.Command("bash", "-c", "iptables -S INPUT | grep -w '"+port+"' | sed 's/-A/-D/' | while read line; do iptables $line; done").Run()
+
+						// APPLY new rules
+						_ = exec.Command("iptables", "-t", "nat", "-I", "PREROUTING", "1", "-i", dev, "-p", "udp", "--dport", "6000:19999", "-j", "REDIRECT", "--to-port", port).Run()
+						_ = exec.Command("iptables", "-I", "INPUT", "1", "-p", "udp", "--dport", port, "-j", "ACCEPT").Run()
+						_ = exec.Command("iptables", "-I", "INPUT", "1", "-p", "udp", "--dport", "6000:19999", "-j", "ACCEPT").Run()
+						_ = exec.Command("iptables", "-t", "nat", "-D", "POSTROUTING", "-o", dev, "-j", "MASQUERADE").Run()
+						_ = exec.Command("iptables", "-t", "nat", "-A", "POSTROUTING", "-o", dev, "-j", "MASQUERADE").Run()
+					}
+				}
+			}
+		}
+	}
 }
