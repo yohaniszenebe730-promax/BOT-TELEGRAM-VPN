@@ -77,18 +77,55 @@ func GetUserProcesses(username string) ([]string, error) {
 
 // EnforceConnectionLimits revisa las conexiones activas y mata procesos quirúrgicamente si exceden el límite
 func EnforceConnectionLimits() {
-	connections, err := CountOnlineConnections()
+	// 1. Leer TODOS los límites de limits.conf de una sola vez
+	limitsMap := make(map[string]int)
+	configData, err := os.ReadFile("/etc/security/limits.conf")
+	if err == nil {
+		lines := strings.Split(string(configData), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "#") || line == "" {
+				continue
+			}
+			fields := strings.Fields(line)
+			if len(fields) >= 4 && fields[1] == "hard" && fields[2] == "maxlogins" {
+				lim, err := strconv.Atoi(fields[3])
+				if err == nil {
+					limitsMap[fields[0]] = lim
+				}
+			}
+		}
+	}
+
+	// 2. Extraer TODOS los procesos de todos los usuarios de un solo ps
+	out, err := exec.Command("ps", "-eo", "pid,user,comm", "--no-headers", "--sort=start_time").Output()
 	if err != nil {
 		return
 	}
 
-	for user, activeCount := range connections {
-		maxLogins := GetUserMaxLogins(user)
-		if maxLogins > 0 && activeCount > maxLogins {
-			pids, err := GetUserProcesses(user)
-			if err != nil || len(pids) <= maxLogins {
+	userPids := make(map[string][]string)
+	lines := strings.Split(string(out), "\n")
+	for _, line := range lines {
+		fields := strings.Fields(line)
+		if len(fields) >= 3 {
+			pid := fields[0]
+			user := fields[1]
+			cmd := fields[2]
+			if user == "root" || user == "sshd" || user == "systemd" {
 				continue
 			}
+			// dropbear o sshd identifican conexiones de red
+			if strings.Contains(cmd, "sshd") || strings.Contains(cmd, "dropbear") {
+				userPids[user] = append(userPids[user], pid)
+			}
+		}
+	}
+
+	// 3. Evaluar y matar excesos
+	for user, pids := range userPids {
+		maxLogins := limitsMap[user] // Default es 0 (sin límite)
+		if maxLogins > 0 && len(pids) > maxLogins {
+			// Matar los procesos más recientes que excedan
 			for i := maxLogins; i < len(pids); i++ {
 				exec.Command("kill", "-9", pids[i]).Run()
 			}
@@ -99,20 +136,21 @@ func EnforceConnectionLimits() {
 // CountOnlineConnections devuelve el número total de conexiones SSH y Dropbear por usuario
 func CountOnlineConnections() (map[string]int, error) {
 	connections := make(map[string]int)
-	out, err := exec.Command("ps", "aux").Output()
+	out, err := exec.Command("ps", "-eo", "user,comm", "--no-headers").Output()
 	if err != nil {
 		return connections, err
 	}
 
 	lines := strings.Split(string(out), "\n")
 	for _, line := range lines {
-		if strings.Contains(line, "root") || strings.Contains(line, "grep") {
-			continue
-		}
-		if strings.Contains(line, "sshd:") || strings.Contains(line, "dropbear") {
-			fields := strings.Fields(line)
-			if len(fields) > 0 {
-				user := fields[0]
+		fields := strings.Fields(line)
+		if len(fields) >= 2 {
+			user := fields[0]
+			cmd := fields[1]
+			if user == "root" || user == "sshd" || strings.Contains(user, "sysid") {
+				continue
+			}
+			if strings.Contains(cmd, "sshd") || strings.Contains(cmd, "dropbear") {
 				connections[user]++
 			}
 		}

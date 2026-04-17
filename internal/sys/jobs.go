@@ -101,9 +101,6 @@ func AutoCleanupLoop(b *tele.Bot) {
 			EnforceConnectionLimits()
 		}
 
-		// EnforceConnectionLimits revisa las conexiones activas cada tick
-		EnforceConnectionLimits()
-
 		tick++
 		time.Sleep(7 * time.Second)
 	}
