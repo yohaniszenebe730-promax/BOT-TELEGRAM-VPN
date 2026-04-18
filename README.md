@@ -36,6 +36,15 @@
 - **Resiliencia de Servicios (Xray & HAProxy):** Recuperación automática de los protocolos mediante políticas avanzadas de systemd (Restart=always).
 - **Deep System Cleanup:** Botón de un solo clic para liberar cuellos de botella de memoria (cachés, logs pesados, paquetes huérfanos).
 
+### ☁️ Copias de Seguridad "Plug & Play" (Google Drive)
+Tu bot incluye un sistema de respaldos directamente integrado con Telegram, ¡sin necesidad de comandos complicados vía SSH! Para activar las copias de seguridad (manuales y automáticas cada 24H):
+1. Entra a **Google Cloud Console**, busca `Cuentas de Servicio` (Service Accounts) y crea una cuenta.
+2. Entra a las opciones de esa cuenta, añade una **Clave JSON** nueva y descárgala a tu celular o PC.
+3. Comparte la carpeta que prefieras en tu Google Drive con el correo robótico de la cuenta de servicio que acabas de crear.
+4. **⚠️ Arrastra y envía ese archivo `.json` como un documento a tu propio Bot de Telegram.**
+
+¡Listo! El bot encriptará permanentemente las credenciales y comenzará a enviarte tu base de datos y configuraciones directo a la nube. Si tu VPS muere, instala un bot nuevo, sube tu JSON de nuevo y ¡presiona **Restaurar Backup**!
+
 ---
 
 ## 📥 Instalación Rápida (Universal)
