@@ -38,12 +38,15 @@
 
 ### ☁️ Copias de Seguridad "Plug & Play" (Google Drive)
 Tu bot incluye un sistema de respaldos directamente integrado con tu Google Drive personal. Para activar las copias de seguridad (manuales y automáticas cada 24H):
-1. Entra a **Google Cloud Console**, busca `Credenciales` (Credentials) y crea un **ID de Cliente OAuth** (Aplicación de Escritorio).
-2. Descarga el archivo JSON resultante, renómbralo a `credentials.json` y colócalo en la misma carpeta donde instalaste el bot en tu servidor.
-3. Abre Telegram y envíale al bot el comando: `/authdrive`
-4. Sigue las breves instrucciones en pantalla para darle permiso al bot **solo una vez en la vida**.
 
-¡Listo! A partir de ahora el bot enviará todos los días tu base de datos a Google Drive sin que tengas que hacer nada.
+1. Entra a **Google Cloud Console**, ve a `Público` (Audience) y en *Usuarios de Prueba* asegúrate de agregar tu propio correo electrónico de GMail.
+2. Ve a `Credenciales` y crea un **ID de Cliente OAuth** seleccionado el tipo *Aplicación de Escritorio*.
+3. Descarga el archivo JSON resultante, renómbralo exactamente a `credentials.json` y súbelo a tu VPS en la ruta: `/opt/depwise_bot/credentials.json`.
+4. Abre Telegram y mándale al bot el comando: `/authdrive`.
+5. Abre el link de Google, inicia sesión. Si la página final da error de *localhost*, no te asustes: mira la barra de direcciones de tu navegador web y **copia el código larguísimo que aparece después de `code=`**.
+6. Regresa al bot en Telegram y envía: `/authdrive PEGA_TU_CODIGO_AQUI`.
+
+¡Asunto arreglado! El bot vinculará tu Drive de por vida y enviará ahí tu base de datos todos los días sin que tengas que hacer nada. Podrás usar el botón de **📥 Restaurar Backup** cuando instales el bot en un nuevo VPS para recuperar a todos tus usuarios automáticamente.
 
 ---
 
