@@ -47,6 +47,7 @@ type ConfigData struct {
 	Xray             XrayConfig           `json:"xray"`
 	XrayUsers        map[string]XrayUser  `json:"xray_users"` // uuid -> XrayUser data
 	AutoReboot       bool                 `json:"auto_reboot"`
+	DriveLastBackup  string               `json:"drive_last_backup"`
 }
 
 type XrayConfig struct {
@@ -257,6 +258,7 @@ func defaultData() *ConfigData {
 		PublicScanner:   true,
 		XrayUsers:       make(map[string]XrayUser),
 		AutoReboot:      false,
+		DriveLastBackup: "",
 	}
 }
 
