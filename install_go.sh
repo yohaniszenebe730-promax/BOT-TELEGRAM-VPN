@@ -96,6 +96,7 @@ After=network.target
 Type=simple
 User=root
 EnvironmentFile=$ENV_FILE
+Environment="GOMEMLIMIT=40MiB" "GOGC=20"
 ExecStart=/usr/local/bin/depwise-bot
 Restart=always
 RestartSec=5

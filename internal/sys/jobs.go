@@ -3,6 +3,7 @@ package sys
 import (
 	"fmt"
 	"os/exec"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -91,6 +92,9 @@ func AutoCleanupLoop(b *tele.Bot) {
 
 				return nil
 			})
+
+			// Liberar memoria RAM inactiva al Sistema Operativo
+			debug.FreeOSMemory()
 
 			// Nueva Ejecución: Limpieza cada 60s terminada
 			tick = 0
