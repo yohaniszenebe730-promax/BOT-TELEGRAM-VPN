@@ -27,6 +27,7 @@ func handleMenuAdmins(c tele.Context, b *tele.Bot) error {
 	btnList := markup.Data("📋 Listar Admins", "list_admins")
 	btnAdd := markup.Data("➕ Agregar Admin", "add_admin")
 	btnDel := markup.Data("➖ Quitar Admin", "del_admin_menu")
+	btnRename := markup.Data("✏️ Renombrar Admin", "rename_admin_menu")
 	btnInfo := markup.Data("📝 Editar Info Extra", "edit_extrainfo")
 	btnCloudflare := markup.Data("☁️ Cloudflare Domain", "edit_cloudflare")
 	btnCloudfront := markup.Data("🚀 Cloudfront Domain", "edit_cloudfront")
@@ -50,7 +51,8 @@ func handleMenuAdmins(c tele.Context, b *tele.Bot) error {
 	markup.Inline(
 		markup.Row(btnToggle),
 		markup.Row(btnList, btnAdd),
-		markup.Row(btnDel, btnInfo),
+		markup.Row(btnDel, btnRename),
+		markup.Row(btnInfo),
 		markup.Row(btnCloudflare, btnCloudfront),
 		markup.Row(btnBanner, btnQuotas),
 		markup.Row(btnBackup, btnRestore),
@@ -177,6 +179,42 @@ func handleDelAdminExec(c tele.Context, b *tele.Bot) error {
 		return nil
 	})
 	return handleListAdmins(c, b)
+}
+
+func handleRenameAdminMenu(c tele.Context, b *tele.Bot) error {
+	data, _ := db.Load()
+	if len(data.Admins) == 0 {
+		return c.Respond(&tele.CallbackResponse{Text: "No hay administradores para renombrar.", ShowAlert: true})
+	}
+
+	markup := &tele.ReplyMarkup{}
+	var rows []tele.Row
+	for id, info := range data.Admins {
+		rows = append(rows, markup.Row(markup.Data("✏️ "+info.Alias+" ("+id+")", "rename_adm_sel:"+id)))
+	}
+	rows = append(rows, markup.Row(markup.Data("🔙 Volver", "menu_admins")))
+	markup.Inline(rows...)
+
+	return SafeEditCtx(c, b, "✏️ <b>Renombrar Administrador</b>\n\nSelecciona al admin que deseas renombrar:", markup)
+}
+
+func handleRenameAdminSelect(c tele.Context, b *tele.Bot) error {
+	id := strings.TrimPrefix(c.Callback().Data, "rename_adm_sel:")
+	chatID := c.Chat().ID
+
+	data, _ := db.Load()
+	info, exists := data.Admins[id]
+	if !exists {
+		return c.Respond(&tele.CallbackResponse{Text: "Admin no encontrado.", ShowAlert: true})
+	}
+
+	SetTempValue(chatID, "rename_admin_id", id)
+	SetUserStep(chatID, "awaiting_rename_admin_alias")
+
+	markup := &tele.ReplyMarkup{}
+	markup.Inline(markup.Row(markup.Data("❌ Cancelar", "menu_admins")))
+
+	return SafeEditCtx(c, b, fmt.Sprintf("✏️ <b>Renombrar Admin</b>\n\n👤 <b>Actual:</b> %s\n🆔 <b>ID:</b> <code>%s</code>\n\nEscribe el <b>nuevo alias</b>:", info.Alias, id), markup)
 }
 
 func handleEditExtraInfoPrompt(c tele.Context, b *tele.Bot) error {

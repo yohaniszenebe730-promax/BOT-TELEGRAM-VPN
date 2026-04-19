@@ -622,6 +622,32 @@ func processVPNSteps(step string, text string, chatID int64, c tele.Context, b *
 		b.Edit(lastMsg, fmt.Sprintf("✅ <b>Nuevo Administrador Registrado</b>\n\n👤 <b>Alias:</b> %s\n🆔 <b>ID:</b> <code>%s</code>", alias, id), markup, tele.ModeHTML)
 		return nil
 
+	case "awaiting_rename_admin_alias":
+		alias := strings.TrimSpace(text)
+		id := GetTempValue(chatID, "rename_admin_id")
+		DeleteUserStep(chatID)
+
+		if alias == "" {
+			b.Edit(lastMsg, "❌ <b>El alias no puede estar vacío.</b>", markup, tele.ModeHTML)
+			return nil
+		}
+		if id == "" {
+			b.Edit(lastMsg, "❌ <b>Error:</b> No se encontró el ID temporal. Intenta de nuevo.", markup, tele.ModeHTML)
+			return nil
+		}
+
+		db.Update(func(data *db.ConfigData) error {
+			if _, exists := data.Admins[id]; exists {
+				data.Admins[id] = db.AdminInfo{Alias: alias}
+			}
+			return nil
+		})
+
+		markupBack := &tele.ReplyMarkup{}
+		markupBack.Inline(markupBack.Row(markupBack.Data("🔙 Volver", "menu_admins")))
+		b.Edit(lastMsg, fmt.Sprintf("✅ <b>Admin Renombrado</b>\n\n👤 <b>Nuevo Alias:</b> %s\n🆔 <b>ID:</b> <code>%s</code>", alias, id), markupBack, tele.ModeHTML)
+		return nil
+
 	case "awaiting_vpn_extrainfo":
 		info := text
 		DeleteUserStep(chatID)

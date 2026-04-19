@@ -234,6 +234,8 @@ func StartBot() {
 	b.Handle("\fdel_confirm:", func(c tele.Context) error { return handleDeleteSelection(c, b) })
 	b.Handle("\fdel_adm_exec:", func(c tele.Context) error { return handleDelAdminExec(c, b) })
 	b.Handle("\fdel_xray_exec", func(c tele.Context) error { return handleDeleteXrayExec(c, b) })
+	b.Handle("\frename_adm_sel:", func(c tele.Context) error { return handleRenameAdminSelect(c, b) })
+	b.Handle(&tele.Btn{Unique: "rename_admin_menu"}, func(c tele.Context) error { return handleRenameAdminMenu(c, b) })
 
 	// Ajustes Pro
 	b.Handle(&tele.Btn{Unique: "toggle_public_access"}, func(c tele.Context) error { return handleTogglePublicAccess(c, b) })
