@@ -3,7 +3,6 @@ package bot
 import (
 	"fmt"
 	"os/exec"
-	"strings"
 
 	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/db"
 	"github.com/Depwisescript/BOT-TELEGRAM-VPN/internal/sys"
@@ -164,7 +163,7 @@ func handleDelAdminMenu(c tele.Context, b *tele.Bot) error {
 	markup := &tele.ReplyMarkup{}
 	var rows []tele.Row
 	for id, info := range data.Admins {
-		rows = append(rows, markup.Row(markup.Data("❌ "+info.Alias+" ("+id+")", "del_adm_exec:"+id)))
+		rows = append(rows, markup.Row(markup.Data("❌ "+info.Alias+" ("+id+")", "del_adm_exec", id)))
 	}
 	rows = append(rows, markup.Row(markup.Data("🔙 Volver", "menu_admins")))
 	markup.Inline(rows...)
@@ -173,7 +172,7 @@ func handleDelAdminMenu(c tele.Context, b *tele.Bot) error {
 }
 
 func handleDelAdminExec(c tele.Context, b *tele.Bot) error {
-	id := strings.TrimPrefix(c.Callback().Data, "del_adm_exec:")
+	id := c.Data()
 
 	// Buscar alias antes de borrar
 	data, _ := db.Load()
@@ -204,7 +203,7 @@ func handleRenameAdminMenu(c tele.Context, b *tele.Bot) error {
 	markup := &tele.ReplyMarkup{}
 	var rows []tele.Row
 	for id, info := range data.Admins {
-		rows = append(rows, markup.Row(markup.Data("✏️ "+info.Alias+" ("+id+")", "rename_adm_sel:"+id)))
+		rows = append(rows, markup.Row(markup.Data("✏️ "+info.Alias+" ("+id+")", "rename_adm_sel", id)))
 	}
 	rows = append(rows, markup.Row(markup.Data("🔙 Volver", "menu_admins")))
 	markup.Inline(rows...)
@@ -213,7 +212,7 @@ func handleRenameAdminMenu(c tele.Context, b *tele.Bot) error {
 }
 
 func handleRenameAdminSelect(c tele.Context, b *tele.Bot) error {
-	id := strings.TrimPrefix(c.Callback().Data, "rename_adm_sel:")
+	id := c.Data()
 	chatID := c.Chat().ID
 
 	data, _ := db.Load()
