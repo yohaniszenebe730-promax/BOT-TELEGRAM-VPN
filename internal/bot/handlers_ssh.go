@@ -205,6 +205,7 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 				title := data.SSHBannerTitles[user]
 				limit := sys.GetUserMaxLogins(user)
 				sys.WriteUserBanner(user, title, limit, newExpire)
+				sys.SyncSSHDBanners()
 				return nil
 			})
 			SafeEdit(chatID, b, lastMsg, fmt.Sprintf("✅ Renovado %d días para %s", days, user), markup)
@@ -226,6 +227,7 @@ func handleTextInputs(c tele.Context, b *tele.Bot) error {
 			if expire, ok := data.SSHTimeUsers[user]; ok {
 				title := data.SSHBannerTitles[user]
 				sys.WriteUserBanner(user, title, limit, expire)
+				sys.SyncSSHDBanners()
 			}
 			SafeEdit(chatID, b, lastMsg, fmt.Sprintf("✅ Límite cambiado para %s", user), markup)
 		}
@@ -346,6 +348,7 @@ func finishSSHCreation(c tele.Context, b *tele.Bot, chatID int64, lastMsg *tele.
 		bannerTitle = "INTERNET ILIMITADO"
 	}
 	sys.WriteUserBanner(user, bannerTitle, limit, expireDate)
+	sys.SyncSSHDBanners()
 
 	// Respuesta final
 	ip := sys.GetPublicIP()
