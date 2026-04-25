@@ -79,11 +79,8 @@ install_bot() {
     rm -rf /tmp/BOT-TELEGRAM-VPN
     cd ~
 
-    log_info "Instalando herramientas de Escaner (en segundo plano, máx 2 min)..."
-    export GOPATH="$HOME/go"
-    export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
-    timeout 120 go install github.com/tomnomnom/assetfinder@latest 2>/dev/null && log_info "assetfinder instalado ✅" || log_warn "assetfinder no se instaló (puedes instalarlo después desde Protocolos)."
-    timeout 120 go install github.com/projectdiscovery/httpx/cmd/httpx@latest 2>/dev/null && log_info "httpx instalado ✅" || log_warn "httpx no se instaló (puedes instalarlo después desde Protocolos)."
+    # Las herramientas de Escaner (assetfinder/httpx) se instalan desde
+    # el menú Protocolos del bot. No se instalan aquí para evitar bloqueos.
 
     # 4. Servicio Systemd
     log_info "Generando sistema daemon SystemD..."

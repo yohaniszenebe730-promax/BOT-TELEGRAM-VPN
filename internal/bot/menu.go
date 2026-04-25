@@ -195,7 +195,16 @@ func StartBot() {
 		return handleInstallUDPCustom(c, b)
 	})
 	b.Handle(&tele.Btn{Unique: "install_scanner_deps"}, func(c tele.Context) error {
-		return handleInstallScannerDeps(c, b)
+		return handleInstallScannerAll(c, b)
+	})
+	b.Handle(&tele.Btn{Unique: "submenu_scanner"}, func(c tele.Context) error {
+		return handleSubMenuScanner(c, b)
+	})
+	b.Handle(&tele.Btn{Unique: "install_scanner_all"}, func(c tele.Context) error {
+		return handleInstallScannerAll(c, b)
+	})
+	b.Handle(&tele.Btn{Unique: "uninstall_scanner_all"}, func(c tele.Context) error {
+		return handleUninstallScannerAll(c, b)
 	})
 	b.Handle(&tele.Btn{Unique: "install_xray"}, func(c tele.Context) error {
 		return handleInstallXray(c, b, c.Message())

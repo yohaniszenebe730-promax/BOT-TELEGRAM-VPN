@@ -32,7 +32,7 @@ func handleMenuProtocols(c tele.Context, b *tele.Bot) error {
 	btnDropbear := markup.Data("🐻 Dropbear", "submenu_dropbear")
 	btnSSHWS := markup.Data("🌐 SSH WebSocket", "submenu_sshws")
 	btnXray := markup.Data("💎 Xray (VMess)", "submenu_xray")
-	btnScannerDeps := markup.Data("🛠️ Instalar Herramientas Escaner", "install_scanner_deps")
+	btnScanner := markup.Data("🔍 Escaner", "submenu_scanner")
 	btnCancel := markup.Data("🔙 Volver", "back_main")
 
 	markup.Inline(
@@ -41,8 +41,8 @@ func handleMenuProtocols(c tele.Context, b *tele.Bot) error {
 		markup.Row(btnProxy, btnFalcon),
 		markup.Row(btnSSL, btnDropbear),
 		markup.Row(btnSSHWS, btnXray),
+		markup.Row(btnScanner),
 		markup.Row(markup.Data("🛡️ Diagnóstico de Red", "protocol_diag")),
-		markup.Row(btnScannerDeps),
 		markup.Row(btnCancel),
 	)
 
@@ -68,24 +68,6 @@ func handleMenuBroadcast(c tele.Context, b *tele.Bot) error {
 	return SafeEditCtx(c, b, "📢 <b>Mensaje Global (Broadcast)</b>\n\n✏️ <i>Escribe el mensaje que deseas enviar a todos los usuarios:</i>\n\nPuedes usar etiquetas HTML básicas como &lt;b&gt;, &lt;i&gt;, etc.", markup)
 }
 
-func handleInstallScannerDeps(c tele.Context, b *tele.Bot) error {
-	chatID := c.Chat().ID
-	if !isSuperAdminID(chatID) {
-		return c.Send("⛔ Solo el SuperAdmin puede realizar esta instalación manual.", tele.ModeHTML)
-	}
-
-	SafeEditCtx(c, b, "⏳ <b>Instalando Herramientas de Escaneo...</b>\n\n<i>Esto instalará assetfinder y httpx. Por favor espera...</i>", nil)
-
-	err := sys.EnsureScannerDeps()
-	markup := &tele.ReplyMarkup{}
-	markup.Inline(markup.Row(markup.Data("🔙 Volver", "menu_protocols")))
-
-	if err != nil {
-		return SafeEditCtx(c, b, fmt.Sprintf("❌ <b>Error en la instalación:</b>\n<pre>%v</pre>", err), markup)
-	}
-
-	return SafeEditCtx(c, b, "✅ <b>Herramientas de Escaneo Instaladas y Vinculadas Correctamente.</b>\n\nYa puedes usar el botón 🔍 <b>Escaner</b> del menú principal.", markup)
-}
 
 // Sub-Menús de Protocolos
 func handleSubMenuSlowDNS(c tele.Context, b *tele.Bot) error {

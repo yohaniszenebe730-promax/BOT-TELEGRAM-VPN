@@ -2,25 +2,104 @@ package sys
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
 
-// EnsureScannerDeps checks and installs assetfinder and httpx if missing
-func EnsureScannerDeps() error {
-	// Check Go
-	goPath, err := exec.LookPath("go")
+// IsScannerToolInstalled verifica si una herramienta específica del escáner está instalada
+func IsScannerToolInstalled(name string) bool {
+	return findGoBinary(name) != ""
+}
+
+// GetScannerStatus devuelve el estado de las herramientas del escáner
+func GetScannerStatus() (assetfinderOK bool, httpxOK bool) {
+	return IsScannerToolInstalled("assetfinder"), IsScannerToolInstalled("httpx")
+}
+
+// InstallScannerTool instala una herramienta específica del escáner con progreso
+// Retorna un canal que emite mensajes de progreso y un canal de error final
+func InstallScannerTool(name string) error {
+	goPath := findGoPath()
+	if goPath == "" {
+		return fmt.Errorf("Go no está instalado en este servidor")
+	}
+
+	var pkg string
+	switch name {
+	case "assetfinder":
+		pkg = "github.com/tomnomnom/assetfinder@latest"
+	case "httpx":
+		pkg = "github.com/projectdiscovery/httpx/cmd/httpx@latest"
+	default:
+		return fmt.Errorf("herramienta desconocida: %s", name)
+	}
+
+	// Usar -v para output verboso (muestra paquetes conforme se descargan)
+	cmd := exec.Command(goPath, "install", pkg)
+	cmd.Env = append(os.Environ(),
+		"GOPATH="+getGoPathDir(),
+		"PATH="+os.Getenv("PATH")+":/usr/local/go/bin",
+	)
+
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		// Try common paths
-		commonPaths := []string{"/usr/local/go/bin/go", "/usr/bin/go"}
-		for _, p := range commonPaths {
-			if err := exec.Command("ls", p).Run(); err == nil {
-				goPath = p
-				break
-			}
+		return fmt.Errorf("error instalando %s: %v\nOutput: %s", name, err, string(out))
+	}
+
+	// Verificar que realmente se instaló
+	if !IsScannerToolInstalled(name) {
+		// Intentar vincular al PATH
+		binPath := getGoPathDir() + "/bin/" + name
+		if _, err := os.Stat(binPath); err == nil {
+			exec.Command("ln", "-sf", binPath, "/usr/local/bin/"+name).Run()
 		}
 	}
 
+	return nil
+}
+
+// UninstallScannerTool desinstala una herramienta del escáner
+func UninstallScannerTool(name string) error {
+	path := findGoBinary(name)
+	if path == "" {
+		return nil // Ya no existe
+	}
+
+	// Eliminar el binario
+	if err := os.Remove(path); err != nil {
+		return fmt.Errorf("error eliminando %s: %v", name, err)
+	}
+
+	// También eliminar del /usr/local/bin si hay un symlink
+	localBin := "/usr/local/bin/" + name
+	if p, _ := os.Readlink(localBin); p != "" {
+		os.Remove(localBin)
+	} else if _, err := os.Stat(localBin); err == nil {
+		os.Remove(localBin)
+	}
+
+	return nil
+}
+
+// UninstallAllScannerTools desinstala todas las herramientas del escáner
+func UninstallAllScannerTools() error {
+	var errs []string
+	if err := UninstallScannerTool("assetfinder"); err != nil {
+		errs = append(errs, err.Error())
+	}
+	if err := UninstallScannerTool("httpx"); err != nil {
+		errs = append(errs, err.Error())
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf(strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+// EnsureScannerDeps checks and installs assetfinder and httpx if missing
+func EnsureScannerDeps() error {
+	goPath := findGoPath()
 	if goPath == "" {
 		return fmt.Errorf("Go no está instalado. Por favor instala Go primero")
 	}
@@ -32,7 +111,6 @@ func EnsureScannerDeps() error {
 
 	for name, pkg := range tools {
 		if findGoBinary(name) == "" {
-			// Install it and capture output for debugging if needed using detected goPath
 			out, err := exec.Command(goPath, "install", "-v", pkg).CombinedOutput()
 			if err != nil {
 				return fmt.Errorf("error instalando %s: %v\nOutput: %s", name, err, string(out))
@@ -41,6 +119,33 @@ func EnsureScannerDeps() error {
 	}
 
 	return nil
+}
+
+func findGoPath() string {
+	if p, err := exec.LookPath("go"); err == nil {
+		return p
+	}
+	commonPaths := []string{"/usr/local/go/bin/go", "/usr/bin/go"}
+	for _, p := range commonPaths {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+	return ""
+}
+
+func getGoPathDir() string {
+	goCmd := findGoPath()
+	if goCmd == "" {
+		return "/root/go"
+	}
+	if out, err := exec.Command(goCmd, "env", "GOPATH").Output(); err == nil {
+		p := strings.TrimSpace(string(out))
+		if p != "" {
+			return p
+		}
+	}
+	return "/root/go"
 }
 
 func findGoBinary(name string) string {
@@ -91,12 +196,12 @@ func RunScanner(domain string) (string, error) {
 	// Resolve paths
 	assetPath := findGoBinary("assetfinder")
 	if assetPath == "" {
-		return "", fmt.Errorf("assetfinder no encontrado. Intenta ejecutar de nuevo para instalarlo.")
+		return "", fmt.Errorf("assetfinder no encontrado. Instálalo desde el menú Protocolos > Escaner.")
 	}
 
 	httpxPath := findGoBinary("httpx")
 	if httpxPath == "" {
-		return "", fmt.Errorf("httpx no encontrado. Intenta ejecutar de nuevo para instalarlo.")
+		return "", fmt.Errorf("httpx no encontrado. Instálalo desde el menú Protocolos > Escaner.")
 	}
 
 	// 1. Assetfinder
