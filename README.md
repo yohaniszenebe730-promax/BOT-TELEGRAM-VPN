@@ -23,11 +23,49 @@ Cada cuenta SSH ahora genera automáticamente un **banner HTML personalizado** q
 
 | Elemento | Descripción |
 |----------|-------------|
-| 🎨 **Logo Depwise** | Arte braille animado en verde |
+| 🎨 **Logo Depwise** | Logo animado en arte braille (idéntico al banner global) |
 | 🏷️ **Título Personalizado** | El admin elige el título al crear la cuenta (ej: `INTERNET ILIMITADO`, `SPEED PREMIUM VIP`) |
 | 👤 **Datos de la Cuenta** | Usuario, fecha de vencimiento, días restantes, límite de dispositivos |
 | 📢 **Promoción** | Canal @Depwise2 y soporte @Dan3651 |
 | ⚠️ **Reglas** | Normas del servidor con advertencia de ban automático |
+
+### Ejemplo del Banner (vista en HTTP Injector/Custom)
+
+<p align="center">
+  <img width="350" alt="Banner SSH Depwise" src="https://img.shields.io/badge/Formato-HTML%20VPN%20Apps-29b6f6?style=for-the-badge">
+</p>
+
+```
+╔══════════════════════════════════╗
+║          ⣶⡆      ⢰⣶⡀           ║
+║          ⣿⡇      ⢸⣿⡇           ║
+║          ⣿⡇  ⣠⣶⣄  ⢸⣿⡇           ║
+║          ⣿⡇ ⢰⣿⣿⣿⡆ ⢸⣿⡇           ║
+║         ⣿⣿⡄⣿⣿⠻⣿⣿⡀⣿⣿⠁          ║
+║          ⹣⣿⣿⣾⣿⡏ ⢹⣿⣷⣿⣿⠏           ║
+║           ⠙⢿⣿⡿   ⢿⣿⡿⠋            ║
+║                                  ║
+║           D E P W I S E          ║
+║                                  ║
+║   ⚡ INTERNET ILIMITADO ⚡       ║
+║   (o tu título personalizado)    ║
+║══════════════════════════════════║
+║  👤 Usuario:    pepito           ║
+║  📅 Vence:      2026-05-25      ║
+║  ⏳ Días:       30               ║
+║  💻 Límite:     3                ║
+║══════════════════════════════════║
+║  📢 Canal:  @Depwise2           ║
+║  👤 Soporte: @Dan3651           ║
+║  🔥 ¡SERVIDORES PREMIUM! 🔥    ║
+║══════════════════════════════════║
+║  ⚠️ REGLAS: NO Torrent/P2P     ║
+║  🚫 NO Spam · 🚫 NO DDoS       ║
+╚══════════════════════════════════╝
+```
+
+> [!NOTE]
+> El banner real usa **formato HTML con colores** (verde, cyan, amarillo, magenta). La vista anterior es una representación simplificada. En las apps VPN se ve con los colores del banner predeterminado de Depwise.
 
 ### ¿Cómo funciona?
 
