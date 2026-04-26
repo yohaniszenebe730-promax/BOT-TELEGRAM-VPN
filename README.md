@@ -2,6 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Language-Go-00ADD8?style=for-the-badge&logo=go" alt="Go">
+  <img src="https://img.shields.io/badge/OS-Ubuntu%2024.04-E95420?style=for-the-badge&logo=ubuntu" alt="Ubuntu 24.04">
   <img src="https://img.shields.io/badge/Platform-Linux-FCC624?style=for-the-badge&logo=linux" alt="Linux">
   <img src="https://img.shields.io/badge/Status-Stable-success?style=for-the-badge" alt="Status">
   <img src="https://img.shields.io/badge/Version-7.2-blue?style=for-the-badge" alt="Version">
@@ -111,6 +112,9 @@ Cada cuenta SSH ahora genera automáticamente un **banner HTML personalizado** q
 ---
 
 ## 📥 Instalación Rápida (Universal)
+
+> [!NOTE]
+> **Compatibilidad OS:** Este bot fue desarrollado y probado rigurosamente en **Ubuntu 24.04**. Se recomienda encarecidamente utilizar esta versión (o distribuciones basadas en ella) para garantizar el correcto funcionamiento de todas las dependencias (Go, Systemd, SSH, Xray, SlowDNS, etc).
 
 Ejecuta el siguiente comando en tu terminal como usuario **root**:
 
