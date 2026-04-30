@@ -335,6 +335,19 @@ func StartBot() {
 	// Restaurar reglas de iptables que se borran al reiniciar (SlowDNS, ZiVPN)
 	vpn.RestoreIptablesRules()
 
+	// Restaurar contraseñas ZiVPN en config.json tras reinicio de VPS
+	if initZivpn, _ := db.Load(); initZivpn.Zivpn && len(initZivpn.ZivpnUsers) > 0 {
+		var passwords []string
+		for pass := range initZivpn.ZivpnUsers {
+			passwords = append(passwords, pass)
+		}
+		if err := vpn.RestoreZivpnPasswords(passwords); err != nil {
+			log.Printf("Aviso: No se pudieron restaurar contraseñas ZiVPN: %v", err)
+		} else {
+			log.Printf("ZiVPN: %d contraseñas sincronizadas con config.json", len(passwords))
+		}
+	}
+
 	// Instalar sistema de banners individuales por usuario SSH
 	if err := sys.EnsureBannerSystem(); err != nil {
 		log.Printf("Aviso: No se pudo inicializar el sistema de banners: %v", err)

@@ -187,6 +187,54 @@ func AddZivpnUser(password string) error {
 	return exec.Command("systemctl", "restart", "zivpn.service").Run()
 }
 
+// RestoreZivpnPasswords sincroniza las contraseñas de la DB con el config.json de ZiVPN.
+// Se ejecuta al iniciar el bot para garantizar que tras un reinicio de VPS
+// todas las contraseñas registradas en bot_data.json estén presentes en el config.
+func RestoreZivpnPasswords(dbPasswords []string) error {
+	filePath := "/etc/zivpn/config.json"
+
+	// Si no existe el config, ZiVPN no está instalado
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return nil
+	}
+
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	var config ZivpnConfig
+	if err := json.Unmarshal(data, &config); err != nil {
+		return err
+	}
+
+	// Crear un set con las passwords actuales del config
+	existing := make(map[string]bool)
+	for _, p := range config.Auth.Config {
+		existing[p] = true
+	}
+
+	// Detectar contraseñas faltantes
+	changed := false
+	for _, pass := range dbPasswords {
+		if !existing[pass] {
+			config.Auth.Config = append(config.Auth.Config, pass)
+			changed = true
+		}
+	}
+
+	if !changed {
+		return nil // Todo sincronizado, no se necesita reiniciar
+	}
+
+	config.Auth.Mode = "passwords"
+	newData, _ := json.MarshalIndent(config, "", "    ")
+	os.WriteFile(filePath, newData, 0644)
+
+	// Reiniciar servicio para aplicar cambios
+	return exec.Command("systemctl", "restart", "zivpn.service").Run()
+}
+
 // RemoveZivpnUser quita un password del config.json
 func RemoveZivpnUser(password string) error {
 	filePath := "/etc/zivpn/config.json"
