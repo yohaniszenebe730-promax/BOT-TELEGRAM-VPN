@@ -30,8 +30,10 @@ func CreateSSHUser(username string, password string, days int) error {
 	// 1. Calcular Fecha Vencimiento
 	expireDate := time.Now().AddDate(0, 0, days).Format("2006-01-02")
 
-	// 2. Ejecutar useradd -m -s /bin/bash -e "fecha" "usuario"
-	_, err := ExecCmdRun("useradd", "-m", "-s", "/bin/bash", "-e", expireDate, username)
+	// 2. Ejecutar useradd -M -s /bin/false -e "fecha" "usuario"
+	// Usamos -M para NO crear carpeta home (ahorra espacio y evita subida de archivos)
+	// Usamos /bin/false para denegar el acceso a la consola/comandos, pero permite túnel VPN
+	_, err := ExecCmdRun("useradd", "-M", "-s", "/bin/false", "-e", expireDate, username)
 	if err != nil {
 		return fmt.Errorf("fallo al crear usuario: %v", err)
 	}
