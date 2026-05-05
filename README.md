@@ -205,6 +205,7 @@ El bot incluye un sistema de respaldos integrado con tu Google Drive personal. P
 4. Haz clic en **Guardar y Continuar** hasta llegar a **Usuarios de Prueba**.
 5. **⚠️ IMPORTANTE:** Haz clic en **+ Agregar Usuarios** y escribe **tu propio correo de Gmail**. Sin esto, no podrás autorizar el bot.
 6. Haz clic en **Guardar y Continuar** → **Volver al Panel**.
+7. **⚠️ MUY IMPORTANTE (Evitar error invalid_grant):** En la página principal de la Pantalla de Consentimiento, bajo **"Estado de la publicación"**, haz clic en el botón **"Publicar la aplicación" (Publish App)** o "Poner en producción" y confirma. Si dejas la aplicación "En Pruebas" (Testing), **el token caducará cada 7 días** automáticamente.
 
 ### Paso 3: Crear Credenciales OAuth
 
@@ -252,7 +253,7 @@ nano /opt/depwise_bot/credentials.json
 - Usa el botón **📥 Restaurar Backup** desde Ajustes Pro cuando instales el bot en un nuevo VPS para recuperar todos tus usuarios automáticamente.
 
 > [!WARNING]
-> Si el token se revoca o caduca (poco frecuente), el bot te avisará. Solo necesitas repetir el paso 5 con `/authdrive`.
+> Si el token se revoca o caduca verás el error `oauth2: "invalid_grant" "Token has been expired"`. Esto pasa si no pusiste la app "En Producción" (Paso 2.7) caducando a los 7 días. Para arreglarlo hoy, solo necesitas repetir el paso 5 enviando `/authdrive` al bot.
 
 ---
 
@@ -266,7 +267,7 @@ nano /opt/depwise_bot/credentials.json
 | **Xray/VMess no conecta** | HAProxy o Xray no iniciaron | `systemctl status haproxy xray` |
 | **VPS muy lenta** | RAM saturada | Activar **Auto Reboot** en Ajustes Pro |
 | **Banner no aparece** | sshd no recargó | `systemctl reload ssh` o recrear la cuenta |
-| **Error en Google Drive** | Token expirado/revocado | Enviar `/authdrive` de nuevo al bot |
+| **Error en Google Drive (`invalid_grant`)** | Token caducado a los 7 días (App "En Pruebas") | Enviar `/authdrive` al bot. Cambiar app a "Producción" en GCP. |
 | **Escáner no funciona** | Herramientas no instaladas | Ir a **Protocolos → 🔍 Escaner → 📥 Instalar Todo** |
 
 ### 🔒 Fix HAProxy / Puerto 443 Caído
