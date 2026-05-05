@@ -51,7 +51,11 @@ func CreateSSHUser(username string, password string, days int) error {
 
 // DeleteSSHUser borra el usuario, home y reglas asociadas de iptables
 func DeleteSSHUser(username string) error {
-	// 1. Matar procesos primero (para desocupar userdel)
+	// 1. Matar TODOS los procesos del usuario para desconexión forzada instantánea
+	exec.Command("killall", "-9", "-u", username).Run()
+	exec.Command("pkill", "-9", "-u", username).Run()
+
+	// También limpiar usando GetUserProcesses por si acaso (para demonios sshd)
 	pids, _ := GetUserProcesses(username)
 	for _, pid := range pids {
 		exec.Command("kill", "-9", pid).Run()
@@ -61,12 +65,9 @@ func DeleteSSHUser(username string) error {
 	CleanUserRules(username)
 
 	// 3. Borrar usuario con sed y userdel (con timeout manual para no congelar)
-	// Eliminamos rastro en limits
 	exec.Command("sed", "-i", fmt.Sprintf("/^%s hard maxlogins/d", username), "/etc/security/limits.conf").Run()
 
-	// userdel -f -r (usamos Command directo para evitar bloqueos infinitos si algo sale mal)
 	cmd := exec.Command("userdel", "-f", "-r", username)
-	// Esperar max 10 segundos
 	done := make(chan error, 1)
 	go func() { done <- cmd.Run() }()
 
@@ -82,10 +83,12 @@ func DeleteSSHUser(username string) error {
 		}
 	}
 
-	// 4. Archivo limit
-	os.Remove(fmt.Sprintf("/etc/ssh_limits/%s.limit", username))
+	// 4. Limpieza forzada de rastros en disco SSD
+	exec.Command("rm", "-rf", fmt.Sprintf("/home/%s", username)).Run()
+	exec.Command("rm", "-rf", fmt.Sprintf("/var/spool/mail/%s", username)).Run()
 
-	// 5. Eliminar banner individual
+	// 5. Archivo limit y banner
+	os.Remove(fmt.Sprintf("/etc/ssh_limits/%s.limit", username))
 	RemoveUserBanner(username)
 
 	return nil
