@@ -435,6 +435,14 @@ func finishSSHCreation(c tele.Context, b *tele.Bot, chatID int64, lastMsg *tele.
 	}
 	res += "━━━━━━━━━━━━━━\n"
 
+	if dataFinal.CloudflareDomain != "" {
+		res += "🚀 <b>PAYLOAD CLOUDFLARE</b>\n"
+		res += fmt.Sprintf("<code>GET / HTTP/1.1[crlf]Host: %s[crlf]Upgrade: websocket[crlf]Connection: Keep-Alive[crlf][crlf]</code>\n\n", dataFinal.CloudflareDomain)
+		res += "🛠 <b>HTTP CUSTOM (Copia y Pega)</b>\n"
+		res += fmt.Sprintf("<code>%s:80@%s:%s</code>\n", dataFinal.CloudflareDomain, user, pass)
+		res += "━━━━━━━━━━━━━━\n"
+	}
+
 	markup := &tele.ReplyMarkup{}
 	markup.Inline(markup.Row(markup.Data("🔙 Volver", "back_main")))
 	_, err = SafeEdit(chatID, b, lastMsg, res, markup)
