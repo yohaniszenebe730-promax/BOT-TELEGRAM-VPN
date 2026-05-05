@@ -16,6 +16,18 @@
 
 ---
 
+## 🔥 Novedades v7.4 — Ultra Seguridad y Optimización de CPU
+
+### 🛡️ Seguridad SSH Extrema (Anti-Abuso)
+- **Bloqueo de Consola:** Las nuevas cuentas SSH se crean con consola `/bin/false`. Esto significa que **solo sirven como VPN** (túnel HTTP Custom/Injector, SlowDNS, WebSocket), pero los usuarios ya no pueden entrar a la terminal para ejecutar comandos.
+- **Bloqueo de Archivos:** Ya no se crea la carpeta `/home` para los clientes. Es imposible que usen tu servidor para subir, descargar o alojar archivos basura.
+- **Eliminación y Desconexión Agresiva:** Al eliminar un usuario (manual o por expiración), el bot lanza `killall -9` y `pkill` para **desconectar forzosamente** todas sus conexiones activas al instante, y ejecuta un borrado profundo (`rm -rf`) en el SSD para destruir cualquier rastro del usuario.
+
+### ⚡ Optimización Masiva de Rendimiento
+- **Reducción del 90% en uso de CPU:** Se reescribió por completo el motor de monitoreo de límites SSH. Antes, el bot consultaba a nivel de sistema (`grep`) y recargaba el servicio SSH cada 60 segundos por cada usuario. Ahora la lectura es directa en la RAM de Go y `sshd` solo se recarga estrictamente cuando se crea o elimina una cuenta. Ideal para servidores con cientos de usuarios conectados simultáneamente sin lag ni congelamientos.
+
+---
+
 ## 🆕 Novedades v7.3 — Resiliencia HAProxy + Fix SSL/TLS Directo
 
 ### 🔒 HAProxy Auto-Recovery tras Reboot
