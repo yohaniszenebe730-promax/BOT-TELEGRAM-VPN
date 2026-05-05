@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -19,7 +20,9 @@ const (
 // CheckForUpdate verifica si hay una actualización disponible comparando la versión local con la remota.
 // Retorna (hayActualizacion, nuevaVersion, error)
 func CheckForUpdate() (bool, string, error) {
-	resp, err := http.Get(RemoteVersionURL)
+	// Agregamos un timestamp para evitar la caché agresiva de 5 minutos de raw.githubusercontent.com
+	urlWithNoCache := fmt.Sprintf("%s?t=%d", RemoteVersionURL, time.Now().Unix())
+	resp, err := http.Get(urlWithNoCache)
 	if err != nil {
 		return false, "", fmt.Errorf("error conectando con GitHub: %v", err)
 	}
