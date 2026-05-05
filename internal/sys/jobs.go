@@ -38,6 +38,7 @@ func AutoCleanupLoop(b *tele.Bot) {
 			// Guardar el tráfico en DB para que persista tras reiniciar la VPS
 			GetGlobalTraffic()
 
+			var sshExpired bool
 			db.Update(func(data *db.ConfigData) error {
 				now := time.Now()
 				nowStr := now.Format("2006-01-02")
@@ -70,6 +71,7 @@ func AutoCleanupLoop(b *tele.Bot) {
 						delete(data.SSHOwners, user)
 						delete(data.SSHLastActive, user)
 						delete(data.SSHBannerTitles, user)
+						sshExpired = true
 					}
 				}
 
@@ -93,6 +95,10 @@ func AutoCleanupLoop(b *tele.Bot) {
 
 				return nil
 			})
+
+			if sshExpired {
+				SyncSSHDBanners()
+			}
 
 			// Liberar memoria RAM inactiva al Sistema Operativo
 			debug.FreeOSMemory()

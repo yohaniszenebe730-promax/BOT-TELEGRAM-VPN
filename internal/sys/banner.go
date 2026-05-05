@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -229,8 +230,28 @@ func SyncSSHDBanners() error {
 	return nil
 }
 
+// GetAllUserMaxLogins lee todos los límites de una sola vez
+func GetAllUserMaxLogins() map[string]int {
+	limits := make(map[string]int)
+	configData, err := os.ReadFile("/etc/security/limits.conf")
+	if err == nil {
+		lines := strings.Split(string(configData), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "#") || line == "" {
+				continue
+			}
+			fields := strings.Fields(line)
+			if len(fields) >= 4 && fields[1] == "hard" && fields[2] == "maxlogins" {
+				lim, _ := strconv.Atoi(fields[3])
+				limits[fields[0]] = lim
+			}
+		}
+	}
+	return limits
+}
+
 // RefreshAllBanners regenera los banners de todos los usuarios SSH activos
-// y sincroniza sshd_config
 func RefreshAllBanners() {
 	data, err := db.Load()
 	if err != nil {
@@ -244,16 +265,20 @@ func RefreshAllBanners() {
 
 	// Asegurar que existe el directorio
 	os.MkdirAll(bannerDir, 0755)
+	
+	// Leer todos los límites de una vez (Optimización CPU)
+	limits := GetAllUserMaxLogins()
 
 	for user, expire := range data.SSHTimeUsers {
 		title := ""
 		if data.SSHBannerTitles != nil {
 			title = data.SSHBannerTitles[user]
 		}
-		limit := GetUserMaxLogins(user)
+		limit := limits[user]
 		WriteUserBanner(user, title, limit, expire, data)
 	}
 
-	// Sincronizar sshd_config con Match User blocks
-	SyncSSHDBanners()
+	// NOTA: No llamamos a SyncSSHDBanners() aquí para evitar 
+	// recargas innecesarias (systemctl reload ssh) cada minuto,
+	// lo cual causaba el uso alto de CPU en la VPS.
 }
