@@ -503,11 +503,13 @@ func handleMenuUpdater(c tele.Context, b *tele.Bot) error {
 	markup := &tele.ReplyMarkup{}
 	btnCheck := markup.Data("🔍 Buscar Actualización", "updater_check")
 	btnAuto := markup.Data("⚙️ Auto-Update: "+autoStatus, "updater_toggle_auto")
+	btnForce := markup.Data("⚠️ Forzar Reinstalación (Dev)", "updater_run")
 	btnBack := markup.Data("🔙 Volver a Ajustes", "menu_admins")
 
 	markup.Inline(
 		markup.Row(btnCheck),
 		markup.Row(btnAuto),
+		markup.Row(btnForce),
 		markup.Row(btnBack),
 	)
 
@@ -543,7 +545,11 @@ func handleUpdaterCheck(c tele.Context, b *tele.Bot) error {
 	}
 
 	if !hasUpdate {
-		markup.Inline(markup.Row(btnBack))
+		btnForceNow := markup.Data("⚠️ Forzar Reinstalación", "updater_run")
+		markup.Inline(
+			markup.Row(btnForceNow),
+			markup.Row(btnBack),
+		)
 		return SafeEditCtx(c, b, "✅ <b>Estás en la última versión.</b>\nVersión actual: "+sys.CurrentVersion+"\nVersión remota: "+newVer, markup)
 	}
 
