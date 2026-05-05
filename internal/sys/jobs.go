@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,6 +28,7 @@ func CountZivpnActive() bool {
 func AutoCleanupLoop(b *tele.Bot) {
 
 	tick := 0
+	lastUpdateCheck := time.Now()
 	for {
 		// Revisar límites de conexión activa cada 14 segundos (2 ticks)
 		if tick%2 == 0 {
@@ -99,6 +101,31 @@ func AutoCleanupLoop(b *tele.Bot) {
 			if sshExpired {
 				SyncSSHDBanners()
 			}
+
+			// === AUTO-UPDATE CHECK (CADA 12 HORAS) ===
+			if time.Since(lastUpdateCheck) > 12*time.Hour {
+				lastUpdateCheck = time.Now()
+				
+				var autoUpdateEnabled bool
+				db.Update(func(d *db.ConfigData) error {
+					autoUpdateEnabled = d.AutoUpdate
+					return nil
+				})
+
+				if autoUpdateEnabled {
+					hasUpdate, _, err := CheckForUpdate()
+					if err == nil && hasUpdate {
+						// Notificar a los admins y ejecutar actualización
+						data, _ := db.Load()
+						for adminID := range data.Admins {
+							id, _ := strconv.ParseInt(adminID, 10, 64)
+							b.Send(&tele.User{ID: id}, "🔄 <b>ACTUALIZACIÓN AUTOMÁTICA</b>\nSe ha detectado una nueva versión del bot en GitHub. Aplicando actualización en segundo plano...")
+						}
+						RunUpdate()
+					}
+				}
+			}
+			// ==========================================
 
 			// Liberar memoria RAM inactiva al Sistema Operativo
 			debug.FreeOSMemory()

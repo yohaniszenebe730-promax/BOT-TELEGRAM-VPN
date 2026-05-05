@@ -327,6 +327,12 @@ func StartBot() {
 	b.Handle(&tele.Btn{Unique: "menu_autoreboot"}, func(c tele.Context) error { return handleAutoRebootMenu(c, b) })
 	b.Handle(&tele.Btn{Unique: "toggle_autoreboot"}, func(c tele.Context) error { return handleToggleAutoReboot(c, b) })
 	b.Handle(&tele.Btn{Unique: "menu_bans"}, func(c tele.Context) error { return handleMenuBans(c, b) })
+
+	// Updater
+	b.Handle(&tele.Btn{Unique: "menu_updater"}, func(c tele.Context) error { return handleMenuUpdater(c, b) })
+	b.Handle(&tele.Btn{Unique: "updater_check"}, func(c tele.Context) error { return handleUpdaterCheck(c, b) })
+	b.Handle(&tele.Btn{Unique: "updater_run"}, func(c tele.Context) error { return handleUpdaterRun(c, b) })
+	b.Handle(&tele.Btn{Unique: "updater_toggle_auto"}, func(c tele.Context) error { return handleUpdaterToggleAuto(c, b) })
 	b.Handle(&tele.Btn{Unique: "ban_user_prompt"}, func(c tele.Context) error { return handleBanUserPrompt(c, b) })
 
 	// Drive Backups

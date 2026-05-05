@@ -47,6 +47,7 @@ func handleMenuAdmins(c tele.Context, b *tele.Bot) error {
 
 	btnQuotas := markup.Data("📊 Cuotas Creación", "edit_quotas")
 	btnBans := markup.Data("🚫 Gestión Bans", "menu_bans")
+	btnUpdater := markup.Data("🔄 Sistema Updater", "menu_updater")
 
 	markup.Inline(
 		markup.Row(btnToggle),
@@ -57,6 +58,7 @@ func handleMenuAdmins(c tele.Context, b *tele.Bot) error {
 		markup.Row(btnBanner, btnQuotas),
 		markup.Row(btnBans, btnScanToggle),
 		markup.Row(btnBackup, btnRestore),
+		markup.Row(btnUpdater),
 		markup.Row(btnReset),
 		markup.Row(btnAutoReboot, btnReboot),
 		markup.Row(btnBack),
@@ -477,6 +479,94 @@ func handleServerRebootConfirm(c tele.Context, b *tele.Bot) error {
 func handleServerRebootExec(c tele.Context, b *tele.Bot) error {
 	c.Edit("⏳ <b>Reiniciando VPS...</b> el bot estará offline unos minutos.", tele.ModeHTML)
 	exec.Command("reboot").Run()
+	return nil
+}
+
+// === SISTEMA DE ACTUALIZACIONES (UPDATER) ===
+
+func handleMenuUpdater(c tele.Context, b *tele.Bot) error {
+	if !isAdmin(c.Chat().ID) {
+		return c.Send("⛔ Solo administradores pueden usar esta función.")
+	}
+
+	data, _ := db.Load()
+	autoStatus := "🔴 Desactivada"
+	if data.AutoUpdate {
+		autoStatus = "🟢 Activada"
+	}
+
+	text := "🔄 <b>Sistema de Actualizaciones (GitHub)</b>\n\n"
+	text += "Versión Actual: <b>" + sys.CurrentVersion + "</b>\n"
+	text += "Auto-Actualización: <b>" + autoStatus + "</b>\n\n"
+	text += "Puedes buscar si hay una nueva versión disponible o activar la actualización automática (el bot revisará cada 12 horas)."
+
+	markup := &tele.ReplyMarkup{}
+	btnCheck := markup.Data("🔍 Buscar Actualización", "updater_check")
+	btnAuto := markup.Data("⚙️ Auto-Update: "+autoStatus, "updater_toggle_auto")
+	btnBack := markup.Data("🔙 Volver a Ajustes", "menu_admins")
+
+	markup.Inline(
+		markup.Row(btnCheck),
+		markup.Row(btnAuto),
+		markup.Row(btnBack),
+	)
+
+	return SafeEditCtx(c, b, text, markup)
+}
+
+func handleUpdaterToggleAuto(c tele.Context, b *tele.Bot) error {
+	if !isAdmin(c.Chat().ID) {
+		return nil
+	}
+
+	db.Update(func(d *db.ConfigData) error {
+		d.AutoUpdate = !d.AutoUpdate
+		return nil
+	})
+
+	return handleMenuUpdater(c, b)
+}
+
+func handleUpdaterCheck(c tele.Context, b *tele.Bot) error {
+	if !isAdmin(c.Chat().ID) {
+		return nil
+	}
+
+	hasUpdate, newVer, err := sys.CheckForUpdate()
+
+	markup := &tele.ReplyMarkup{}
+	btnBack := markup.Data("🔙 Volver", "menu_updater")
+
+	if err != nil {
+		markup.Inline(markup.Row(btnBack))
+		return SafeEditCtx(c, b, "❌ <b>Error al buscar actualizaciones:</b>\n"+err.Error(), markup)
+	}
+
+	if !hasUpdate {
+		markup.Inline(markup.Row(btnBack))
+		return SafeEditCtx(c, b, "✅ <b>Estás en la última versión.</b>\nVersión actual: "+sys.CurrentVersion+"\nVersión remota: "+newVer, markup)
+	}
+
+	btnUpdateNow := markup.Data("⚡ Actualizar a v"+newVer, "updater_run")
+	markup.Inline(
+		markup.Row(btnUpdateNow),
+		markup.Row(btnBack),
+	)
+
+	return SafeEditCtx(c, b, "🎉 <b>¡Nueva actualización encontrada!</b>\n\nVersión actual: "+sys.CurrentVersion+"\nNueva versión: <b>"+newVer+"</b>\n\n¿Deseas actualizar el bot ahora mismo? El servicio se reiniciará por unos 15 segundos.", markup)
+}
+
+func handleUpdaterRun(c tele.Context, b *tele.Bot) error {
+	if !isAdmin(c.Chat().ID) {
+		return nil
+	}
+
+	c.Send("⚡ <b>Iniciando actualización...</b>\nDescargando y compilando desde GitHub. El bot no responderá durante unos 15 segundos.", tele.ModeHTML)
+	
+	err := sys.RunUpdate()
+	if err != nil {
+		return c.Send("❌ Error al iniciar el actualizador: " + err.Error())
+	}
 	return nil
 }
 
