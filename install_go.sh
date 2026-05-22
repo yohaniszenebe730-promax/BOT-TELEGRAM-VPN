@@ -117,7 +117,7 @@ uninstall_all() {
     echo -e "       ⚠️ ADVERTENCIA: DESINSTALACIÓN TOTAL ⚠️"
     echo -e "==================================================${NC}"
     echo -e "Esto eliminará:"
-    echo -e "- El Bot de Telegram y sus configuraciones"
+    echo -e "- FES ETHIOPIA de Telegram y sus configuraciones"
     echo -e "- Todos los servicios VPN instalados por el bot (SlowDNS, ProxyDT, SSL, etc.)"
     echo -e "- Los binarios descargados"
     echo -e "- La base de datos de usuarios (bot_data.json)"
@@ -165,7 +165,7 @@ uninstall_all() {
     systemctl daemon-reload
 
     echo -e "${GREEN}=================================================="
-    echo -e "   ✅ DESINSTALACIÓN COMPLETADA EXITOSAMENTE  "
+    echo -e "   ✅ FES ETHIOPIA COMPLETADA EXITOSAMENTE  "
     echo -e "==================================================${NC}"
 }
 
