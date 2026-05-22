@@ -103,11 +103,11 @@ Cada cuenta SSH ahora genera automáticamente un **banner HTML personalizado** q
  ⏳ Días Restant.: 30
  💻 Límite: 3
 ══════════════════════
- 🔥 ¡SERVIDORES PREMIUM A 8.5 SOLES! 🔥
- 📢 Canal: @Depwise2
- 👤 Soporte: @Dan3651
+ 🔥 ¡ FFES ETHIOPIA 🔥
+ 📢 Canal: @https://t.me/Free_Ethio_server_FES
+ 👤 Soporte: @yzpromax
 ══════════════════════
- ✅ CREADO EN : @Depwise_bot
+ ✅ CREADO EN : https://t.me/Free_Ethio_server_FES
 ══════════════════════
 ```
 
