@@ -490,9 +490,9 @@ func handleMenuUpdater(c tele.Context, b *tele.Bot) error {
 	}
 
 	data, _ := db.Load()
-	autoStatus := "🔴 Desactivada"
+	autoStatus := "🔴 Deactivate"
 	if data.AutoUpdate {
-		autoStatus = "🟢 Activada"
+		autoStatus = "🟢 Activator"
 	}
 
 	text := "🔄 <b>Sistema de Actualizaciones (GitHub)</b>\n\n"
@@ -600,7 +600,7 @@ func handleAutoRebootMenu(c tele.Context, b *tele.Bot) error {
 		markup.Row(btnBack),
 	)
 
-	texto := "🕒 <b>CONFIGURACIÓN DE AUTO-REINICIO</b>\n"
+	texto := "🕒 <b>FES ETHIOPIA</b>\n"
 	texto += "━━━━━━━━━━━━━━\n"
 	texto += "<i>El servidor se reiniciará automáticamente cuando alcance 24 Horas de Uptime continuo.</i>\n\n"
 	texto += fmt.Sprintf("📊 <b>Estado:</b> %s\n", status)
